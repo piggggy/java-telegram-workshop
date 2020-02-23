@@ -16,7 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package ch.fihlon.workshop.chatbot;
+package de.bigamgamen.java.telegrambots.hertlhendl;
 
 import org.junit.After;
 import org.junit.Before;

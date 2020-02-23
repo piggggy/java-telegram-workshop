@@ -16,7 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package ch.fihlon.workshop.chatbot;
+package de.bigamgamen.java.telegrambots.hertlhendl;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.telegram.abilitybots.api.bot.AbilityBot;
@@ -55,9 +55,9 @@ import static org.telegram.abilitybots.api.util.AbilityUtils.getChatId;
 
 public class WorkshopBot extends AbilityBot {
 
-    private static String BOT_TOKEN = "1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    private static String BOT_USERNAME = "MyWorkshopBot";
-    private static int CREATOR_ID = 1234567890;
+	private static String BOT_TOKEN = "";
+	private static String BOT_USERNAME = "";
+    private static int CREATOR_ID = 929115416;
 
     public static void main(String[] args) throws TelegramApiRequestException {
         ApiContextInitializer.init();
@@ -76,7 +76,7 @@ public class WorkshopBot extends AbilityBot {
         return CREATOR_ID;
     }
 
-    @SuppressWarnings({"unused", "WeakerAccess"})
+
     public Ability sayHelloWorld() {
         return Ability
                 .builder()
