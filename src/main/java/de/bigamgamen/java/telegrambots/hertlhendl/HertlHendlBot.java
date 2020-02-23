@@ -230,7 +230,7 @@ public class HertlHendlBot extends AbilityBot {
 					+ hertlTimeStampFileName + " 1920px 2000 1";
 			System.out.println(command);
 			// Run a shell command
-			processBuilder.command("cmd.exe", "-c", command);
+			processBuilder.command("bash", "-c", command);
 
 			Process process = processBuilder.start();
 

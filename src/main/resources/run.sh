@@ -1,1 +1,1 @@
-java -cp java.telegrambots-1.0.0-SNAPSHOT.jar;./lib/*;./ de.bigamgamen.java.telegrambots.hertlhendl.HertlHendlBot
+java -cp java.telegrambots-1.0.0-SNAPSHOT.jar:./lib/* de.bigamgamen.java.telegrambots.hertlhendl.HertlHendlBot
