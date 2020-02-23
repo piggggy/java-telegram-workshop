@@ -226,13 +226,15 @@ public class HertlHendlBot extends AbilityBot {
 			
 			
 			// -- Linux --
-			String command = "docker run --rm -v $PWD:/srv lifenz/docker-screenshot " + HERTL_URL + " "
-					+ hertlTimeStampFileName + " 1920px 2000 1";
+			String command = "sudo docker run --rm -v $PWD:/srv lifenz/docker-screenshot " + HERTL_URL + " "
+					+ hertlTimeStampFileName + " 1500px 2000 1";
 			System.out.println(command);
 			// Run a shell command
 			processBuilder.command("bash", "-c", command);
+			
 
 			Process process = processBuilder.start();
+			System.out.println("Docker gestartet");
 
 			StringBuilder output = new StringBuilder();
 
@@ -242,14 +244,15 @@ public class HertlHendlBot extends AbilityBot {
 			while ((line = reader.readLine()) != null) {
 				output.append(line + "\n");
 			}
-
+			
 			int exitVal = process.waitFor();
+			System.out.println("exitvalue: "+exitVal);
 			if (exitVal == 0) {
 				System.out.println("Success!");
 				System.out.println(output);
 				return hertlTimeStampFileName;
 			} else {
-				// abnormal...
+				return null;
 			}
 
 		} catch (IOException e) {
