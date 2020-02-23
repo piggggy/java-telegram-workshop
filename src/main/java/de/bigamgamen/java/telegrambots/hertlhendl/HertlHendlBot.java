@@ -52,21 +52,24 @@ import com.google.common.annotations.VisibleForTesting;
 
 public class HertlHendlBot extends AbilityBot {
 
-	private static String BOT_TOKEN = "";
-	private static String BOT_USERNAME = "";
+	private final static String BOT_TOKEN = "";
+	private final static String BOT_USERNAME = "";
 	private static int CREATOR_ID = 929115416;
 	private static String HERTL_URL = "https://hertel-haehnchen.de/standplatzsuche?search=92637";
 
 	public static void main(String[] args) throws TelegramApiRequestException {
 		ApiContextInitializer.init();
 		final DBContext db = MapDBContext.onlineInstance("bot.db");
-		final HertlHendlBot bot = new HertlHendlBot(db);
+		String token = args[0] != null ? args[0] : BOT_TOKEN;
+		String username = args[1] != null ? args[1] : BOT_USERNAME;
+		final HertlHendlBot bot = new HertlHendlBot(db,token,username);
 		final TelegramBotsApi api = new TelegramBotsApi();
 		api.registerBot(bot);
+		
 	}
 
-	HertlHendlBot(final DBContext db) {
-		super(BOT_TOKEN, BOT_USERNAME, db);
+	HertlHendlBot(final DBContext db, String botToken, String botUsername) {
+		super(botToken, botUsername, db);
 	}
 
 	@Override
@@ -223,10 +226,11 @@ public class HertlHendlBot extends AbilityBot {
 			
 			
 			// -- Linux --
-
+			String command = "docker run --rm -v $PWD:/srv lifenz/docker-screenshot " + HERTL_URL + " "
+					+ hertlTimeStampFileName + " 1920px 2000 1";
+			System.out.println(command);
 			// Run a shell command
-			processBuilder.command("bash", "-c", "docker run --rm -v $PWD:/srv lifenz/docker-screenshot " + HERTL_URL + " "
-					+ hertlTimeStampFileName + " 1920px 2000 1");
+			processBuilder.command("cmd.exe", "-c", command);
 
 			Process process = processBuilder.start();
 
