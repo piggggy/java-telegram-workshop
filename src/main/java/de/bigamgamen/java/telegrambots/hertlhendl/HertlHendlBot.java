@@ -25,11 +25,14 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.telegram.abilitybots.api.bot.AbilityBot;
 import org.telegram.abilitybots.api.db.DBContext;
@@ -47,7 +50,16 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
+import com.gargoylesoftware.htmlunit.BrowserVersion;
+import com.gargoylesoftware.htmlunit.WebClient;
+import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
+import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.google.common.annotations.VisibleForTesting;
 
 public class HertlHendlBot extends AbilityBot {
@@ -57,19 +69,23 @@ public class HertlHendlBot extends AbilityBot {
 	private static int CREATOR_ID = 929115416;
 	private static String HERTL_URL = "https://hertel-haehnchen.de/standplatzsuche?search=92637";
 
-	public static void main(String[] args) throws TelegramApiRequestException {
+	public static void main(String[] args)
+			throws TelegramApiRequestException, ParserConfigurationException, SAXException, IOException {
+
 		ApiContextInitializer.init();
 		final DBContext db = MapDBContext.onlineInstance("bot.db");
 		String token = args[0] != null ? args[0] : BOT_TOKEN;
 		String username = args[1] != null ? args[1] : BOT_USERNAME;
-		final HertlHendlBot bot = new HertlHendlBot(db,token,username);
+		final HertlHendlBot bot = new HertlHendlBot(db, token, username);
 		final TelegramBotsApi api = new TelegramBotsApi();
 		api.registerBot(bot);
-		
+
 	}
 
-	HertlHendlBot(final DBContext db, String botToken, String botUsername) {
+	HertlHendlBot(final DBContext db, String botToken, String botUsername)
+			throws ParserConfigurationException, SAXException, IOException {
 		super(botToken, botUsername, db);
+//		parseStandorteXML();
 	}
 
 	@Override
@@ -139,10 +155,7 @@ public class HertlHendlBot extends AbilityBot {
 		return Ability.builder().name("help").info("shows help").locality(ALL).privacy(PUBLIC).action(context -> {
 			final SendMessage message = new SendMessage();
 			message.setChatId(context.chatId());
-			message.setText("/preise\n"
-					+ "/preiseFoto\n"
-					+ "/standorte\n"
-					+ "/keyboard");
+			message.setText("/preise\n" + "/preiseFoto\n" + "/standorteFoto\n" + "/keyboard");
 			silent.execute(message);
 		}).build();
 	}
@@ -162,7 +175,7 @@ public class HertlHendlBot extends AbilityBot {
 					KeyboardRow row = new KeyboardRow();
 					row.add("/preise");
 					row.add("/preiseFoto");
-					row.add("/standorte");
+					row.add("/standorteFoto");
 					keyboard.add(row);
 
 					// activate the keyboard
@@ -179,37 +192,32 @@ public class HertlHendlBot extends AbilityBot {
 			final SendMessage message = new SendMessage();
 			message.setChatId(context.chatId());
 			message.setText(
-					"1/2 Hähnchen 3,80€\n"
-				  + "Schenkel     2,00€\n"
-				  + "Brezel       0,80€\n"
-				  + "Salat        1,50€\n");
+					"1/2 Hähnchen 3,80€\n" + "Schenkel     2,00€\n" + "Brezel       0,80€\n" + "Salat        1,50€\n");
 			silent.execute(message);
 		}).build();
 	}
-	
-	 @SuppressWarnings({"unused", "WeakerAccess"})
-	    public Ability showPreiseFoto() {
-	        return Ability
-	                .builder()
-	                .name("preiseFoto")
-	                .info("send Preisfoto")
-	                .locality(ALL)
-	                .privacy(PUBLIC)
-	                .action(context -> sendPhotoFromUpload("src/main/resources/chatbot.jpg", context.chatId()))
-	                .build();
-	    }
 
 	@SuppressWarnings({ "unused", "WeakerAccess" })
-	public Ability showStandorte() {
-		return Ability.builder().name("standorte").info("Standorte Weiden").locality(ALL).privacy(PUBLIC)
+	public Ability showPreiseFoto() {
+		return Ability.builder().name("preiseFoto").info("send Preisfoto").locality(ALL).privacy(PUBLIC)
+				.action(context -> sendPhotoFromUpload("src/main/resources/hendl_preise.jpg", context.chatId())).build();	}
+
+	@SuppressWarnings({ "unused", "WeakerAccess" })
+	public Ability showstandorteFoto() {
+		return Ability.builder().name("standorteFoto").info("standorteFoto Weiden").locality(ALL).privacy(PUBLIC)
 				.action(context -> sendPhotoFromUpload(makingScreenshotOfHertlHomepage(), context.chatId())).build();
+	}
+
+	@SuppressWarnings({ "unused", "WeakerAccess" })
+	public Ability showstandorteWeiden() {
+		return Ability.builder().name("standorte").info("standorte Weiden").locality(ALL).privacy(PUBLIC)
+				.action(context -> sendPhotoFromUpload("", context.chatId())).build();
 	}
 
 	private String makingScreenshotOfHertlHomepage() {
 		ProcessBuilder processBuilder = new ProcessBuilder();
 
-	
-		String hertlTimeStampFileName = "hertl_standorte"
+		String hertlTimeStampFileName = "hertl_standorteFoto"
 				+ LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd__HH-mm-ss-SSS")) + ".png";
 		// Run a shell script
 		// processBuilder.command("path/to/hello.sh");
@@ -223,15 +231,13 @@ public class HertlHendlBot extends AbilityBot {
 		// processBuilder.command("C:\\Users\\mkyong\\hello.bat");
 
 		try {
-			
-			
+
 			// -- Linux --
 			String command = "sudo docker run --rm -v $PWD:/srv lifenz/docker-screenshot " + HERTL_URL + " "
 					+ hertlTimeStampFileName + " 1500px 2000 1";
 			System.out.println(command);
 			// Run a shell command
 			processBuilder.command("bash", "-c", command);
-			
 
 			Process process = processBuilder.start();
 			System.out.println("Docker gestartet");
@@ -244,9 +250,9 @@ public class HertlHendlBot extends AbilityBot {
 			while ((line = reader.readLine()) != null) {
 				output.append(line + "\n");
 			}
-			
+
 			int exitVal = process.waitFor();
-			System.out.println("exitvalue: "+exitVal);
+			System.out.println("exitvalue: " + exitVal);
 			if (exitVal == 0) {
 				System.out.println("Success!");
 				System.out.println(output);
@@ -283,5 +289,60 @@ public class HertlHendlBot extends AbilityBot {
 	void setSilent(final SilentSender silent) {
 		this.silent = silent;
 	}
+
+	private String formatStandorte(List<String> standorte) {
+		String alle = "";
+		for (String standort : standorte) {
+			alle += standort;
+		}
+
+		return alle;
+	}
+
+//	private List<String> parseStandorteXML() throws ParserConfigurationException, SAXException, IOException {
+//		// Initialize a list of employees
+//		List<String> employees = new ArrayList<String>();
+//		String employee = null;
+//
+//		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+//		DocumentBuilder builder = factory.newDocumentBuilder();
+//	      Document document = builder.parse(loadHertlUrl());
+////		Document document = builder.parse(HERTL_URL);
+//		document.getDocumentElement().normalize();
+//		NodeList nList = document.getElementsByTagName("searchresult");
+//		for (int temp = 0; temp < nList.getLength(); temp++) {
+//			Node node = nList.item(temp);
+//			if (node.getNodeType() == Node.ELEMENT_NODE) {
+//				Element eElement = (Element) node;
+//				// Create new Employee Object
+////	            employee = new Employee();
+////	            employee.setId(Integer.parseInt(eElement.getAttribute("id")));
+////	            employee.setFirstName(eElement.getElementsByTagName("firstName").item(0).getTextContent());
+////	            employee.setLastName(eElement.getElementsByTagName("lastName").item(0).getTextContent());
+////	            employee.setLocation(eElement.getElementsByTagName("location").item(0).getTextContent());
+//
+//				// Add Employee to list
+//				employees.add(employee);
+//			}
+//		}
+//		return employees;
+//	}
+
+//	private String loadHertlUrl() throws IOException {
+//
+//
+//		        try {
+//		        	WebClient   webClient = new WebClient(BrowserVersion.FIREFOX_68);
+//		            HtmlPage page = webClient.getPage(HERTL_URL);
+//		            webClient.getOptions().setJavaScriptEnabled(true);
+//		            webClient.waitForBackgroundJavaScript(3000);
+//		            List<HtmlAnchor> teams = (List) page.getByXPath("<span class=\"loaction\">");
+//		            System.out.println();
+//		        } catch (IOException ex ) {
+//		            ex.printStackTrace();
+//		        }
+//		        
+//		       return "works";
+//	}
 
 }
