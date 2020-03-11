@@ -140,12 +140,13 @@ public class HertlHendlBot extends AbilityBot {
 		}
 	}
 
+
 	@SuppressWarnings({ "unused", "WeakerAccess" })
 	public Ability showHelp() {
 		return Ability.builder().name("help").info("shows help").locality(ALL).privacy(PUBLIC).action(context -> {
 			final SendMessage message = new SendMessage();
 			message.setChatId(context.chatId());
-			message.setText("/preise\n" + "/preiseFoto\n" + "/standorteFoto\n" + "/keyboard");
+			message.setText("/preise\n" + "/preisefoto\n" + "/standorteFoto\n" + "/keyboard");
 			silent.execute(message);
 		}).build();
 	}
@@ -164,7 +165,7 @@ public class HertlHendlBot extends AbilityBot {
 					// row 1
 					KeyboardRow row = new KeyboardRow();
 					row.add("/preise");
-					row.add("/preiseFoto");
+					row.add("/preisefoto");
 					row.add("/standorteFoto");
 					keyboard.add(row);
 
@@ -189,8 +190,17 @@ public class HertlHendlBot extends AbilityBot {
 
 	@SuppressWarnings({ "unused", "WeakerAccess" })
 	public Ability showPreiseFoto() {
-		return Ability.builder().name("preiseFoto").info("send Preisfoto").locality(ALL).privacy(PUBLIC)
-				.action(context -> sendPhotoFromUpload("src/main/resources/hendl_preise.jpg", context.chatId())).build();	}
+		 return Ability
+	                .builder()
+	                .name("preisefoto")
+	                .info("send Preisfoto")
+	                .locality(ALL)
+	                .privacy(PUBLIC)
+	                .action(context -> 
+	                sendPhotoFromUpload("src/main/resources/hendl_preise.jpg"
+	                		, context.chatId()))
+	                .build();
+	}
 
 	@SuppressWarnings({ "unused", "WeakerAccess" })
 	public Ability showstandorteFoto() {
