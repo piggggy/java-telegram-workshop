@@ -146,7 +146,7 @@ public class HertlHendlBot extends AbilityBot {
 		return Ability.builder().name("help").info("shows help").locality(ALL).privacy(PUBLIC).action(context -> {
 			final SendMessage message = new SendMessage();
 			message.setChatId(context.chatId());
-			message.setText("/preise\n" + "/preisefoto\n" + "/standorteFoto\n" + "/keyboard");
+			message.setText("/preise\n" + "/preisefoto\n" + "/standortefoto\n" + "/keyboard");
 			silent.execute(message);
 		}).build();
 	}
@@ -166,7 +166,7 @@ public class HertlHendlBot extends AbilityBot {
 					KeyboardRow row = new KeyboardRow();
 					row.add("/preise");
 					row.add("/preisefoto");
-					row.add("/standorteFoto");
+					row.add("/standortefoto");
 					keyboard.add(row);
 
 					// activate the keyboard
@@ -204,7 +204,7 @@ public class HertlHendlBot extends AbilityBot {
 
 	@SuppressWarnings({ "unused", "WeakerAccess" })
 	public Ability showstandorteFoto() {
-		return Ability.builder().name("standorteFoto").info("standorteFoto Weiden").locality(ALL).privacy(PUBLIC)
+		return Ability.builder().name("standortefoto").info("standorteFoto Weiden").locality(ALL).privacy(PUBLIC)
 				.action(context -> sendPhotoFromUpload(makingScreenshotOfHertlHomepage(), context.chatId())).build();
 	}
 
