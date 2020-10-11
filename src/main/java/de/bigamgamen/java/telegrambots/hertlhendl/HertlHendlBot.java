@@ -32,6 +32,8 @@ import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.telegram.abilitybots.api.bot.AbilityBot;
 import org.telegram.abilitybots.api.db.DBContext;
 import org.telegram.abilitybots.api.db.MapDBContext;
@@ -54,6 +56,18 @@ import com.google.common.annotations.VisibleForTesting;
 
 public class HertlHendlBot extends AbilityBot {
 
+	
+	private static final String ABILTY_NAME_STANDORTEFOTO = "standortefoto";
+	private static final String ABILTY_NAME_PREISEFOTO = "preisefoto";
+	private static final String ABILTY_NAME_PREISE = "preise";
+	private static final String KEY_PRE_SYMBOL = "/";
+	private static final String KEY_STANDORTEFOTO = KEY_PRE_SYMBOL+ABILTY_NAME_STANDORTEFOTO;
+	private static final String KEY_PREISEFOTO = KEY_PRE_SYMBOL+ABILTY_NAME_PREISEFOTO;
+	private static final String KEY_PREISE = KEY_PRE_SYMBOL+ABILTY_NAME_PREISE;
+	
+	private static final String PRICE_AS_TEXT = "1/2 Hähnchen 3,80€\n" + "Schenkel     2,00€\n" + "Brezel       0,80€\n" + "Salat        1,50€\n";
+	private static final String HENDL_PREISE_JPG = "src/main/resources/hendl_preise.jpg";
+	private final static Logger LOG = LoggerFactory.getLogger(HertlHendlBot.class);
 	private final static String BOT_TOKEN = "";
 	private final static String BOT_USERNAME = "";
 	private static int CREATOR_ID = 929115416;
@@ -61,7 +75,7 @@ public class HertlHendlBot extends AbilityBot {
 
 	public static void main(String[] args)
 			throws TelegramApiRequestException, ParserConfigurationException, SAXException, IOException {
-
+		LOG.info("HertlHendlBot starting");
 		ApiContextInitializer.init();
 		final DBContext db = MapDBContext.onlineInstance("bot.db");
 		String token = args[0] != null ? args[0] : BOT_TOKEN;
@@ -69,7 +83,7 @@ public class HertlHendlBot extends AbilityBot {
 		final HertlHendlBot bot = new HertlHendlBot(db, token, username);
 		final TelegramBotsApi api = new TelegramBotsApi();
 		api.registerBot(bot);
-
+		LOG.info("HertlHendlBot successfull started");
 	}
 
 	HertlHendlBot(final DBContext db, String botToken, String botUsername)
@@ -143,6 +157,7 @@ public class HertlHendlBot extends AbilityBot {
 
 	@SuppressWarnings({ "unused", "WeakerAccess" })
 	public Ability showHelp() {
+		
 		return Ability.builder().name("help").info("shows help").locality(ALL).privacy(PUBLIC).action(context -> {
 			final SendMessage message = new SendMessage();
 			message.setChatId(context.chatId());
@@ -164,9 +179,9 @@ public class HertlHendlBot extends AbilityBot {
 
 					// row 1
 					KeyboardRow row = new KeyboardRow();
-					row.add("/preise");
-					row.add("/preisefoto");
-					row.add("/standortefoto");
+					row.add(KEY_PREISE);
+					row.add(KEY_PREISEFOTO);
+					row.add(KEY_STANDORTEFOTO);
 					keyboard.add(row);
 
 					// activate the keyboard
@@ -179,11 +194,11 @@ public class HertlHendlBot extends AbilityBot {
 
 	@SuppressWarnings({ "unused", "WeakerAccess" })
 	public Ability showPreise() {
-		return Ability.builder().name("preise").info("Preisliste").locality(ALL).privacy(PUBLIC).action(context -> {
+		return Ability.builder().name(ABILTY_NAME_PREISE).info("Preisliste").locality(ALL).privacy(PUBLIC).action(context -> {
 			final SendMessage message = new SendMessage();
 			message.setChatId(context.chatId());
 			message.setText(
-					"1/2 Hähnchen 3,80€\n" + "Schenkel     2,00€\n" + "Brezel       0,80€\n" + "Salat        1,50€\n");
+					PRICE_AS_TEXT);
 			silent.execute(message);
 		}).build();
 	}
@@ -192,19 +207,19 @@ public class HertlHendlBot extends AbilityBot {
 	public Ability showPreiseFoto() {
 		 return Ability
 	                .builder()
-	                .name("preisefoto")
+	                .name(ABILTY_NAME_PREISEFOTO)
 	                .info("send Preisfoto")
 	                .locality(ALL)
 	                .privacy(PUBLIC)
 	                .action(context -> 
-	                sendPhotoFromUpload("src/main/resources/hendl_preise.jpg"
+	                sendPhotoFromUpload(HENDL_PREISE_JPG
 	                		, context.chatId()))
 	                .build();
 	}
 
 	@SuppressWarnings({ "unused", "WeakerAccess" })
 	public Ability showstandorteFoto() {
-		return Ability.builder().name("standortefoto").info("standorteFoto Weiden").locality(ALL).privacy(PUBLIC)
+		return Ability.builder().name(ABILTY_NAME_STANDORTEFOTO).info("standorteFoto Weiden").locality(ALL).privacy(PUBLIC)
 				.action(context -> sendPhotoFromUpload(makingScreenshotOfHertlHomepage(), context.chatId())).build();
 	}
 
