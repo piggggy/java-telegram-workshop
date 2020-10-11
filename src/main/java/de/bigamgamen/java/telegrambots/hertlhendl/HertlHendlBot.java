@@ -23,6 +23,7 @@ import static org.telegram.abilitybots.api.objects.Privacy.PUBLIC;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.time.LocalDateTime;
@@ -53,6 +54,8 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException;
 import org.xml.sax.SAXException;
 
 import com.google.common.annotations.VisibleForTesting;
+
+import de.bigamgamen.java.helper.IOHelper;
 
 public class HertlHendlBot extends AbilityBot {
 
@@ -146,7 +149,15 @@ public class HertlHendlBot extends AbilityBot {
 	private void sendPhotoFromUpload(final String filePath, final Long chatId) {
 		final SendPhoto sendPhotoRequest = new SendPhoto(); // 1
 		sendPhotoRequest.setChatId(chatId); // 2
-		sendPhotoRequest.setPhoto(new File(filePath)); // 3
+		try {
+			sendPhotoRequest.setPhoto(filePath, IOHelper.findResource(filePath));
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} // 3
 		try {
 			execute(sendPhotoRequest); // 4
 		} catch (final TelegramApiException e) {
