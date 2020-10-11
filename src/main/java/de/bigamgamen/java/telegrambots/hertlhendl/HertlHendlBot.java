@@ -220,13 +220,21 @@ public class HertlHendlBot extends AbilityBot {
 	@SuppressWarnings({ "unused", "WeakerAccess" })
 	public Ability showstandorteFoto() {
 		return Ability.builder().name(ABILTY_NAME_STANDORTEFOTO).info("standorteFoto Weiden").locality(ALL).privacy(PUBLIC)
-				.action(context -> sendPhotoFromUpload(makingScreenshotOfHertlHomepage(), context.chatId())).build();
+				.action(context -> makeScreenshotSenditDeleteit(context.chatId())).build();
 	}
 
 	@SuppressWarnings({ "unused", "WeakerAccess" })
 	public Ability showstandorteWeiden() {
 		return Ability.builder().name("standorte").info("standorte Weiden").locality(ALL).privacy(PUBLIC)
 				.action(context -> sendPhotoFromUpload("", context.chatId())).build();
+	}
+	
+	private void makeScreenshotSenditDeleteit(Long chatId)
+	{
+		String fileName = makingScreenshotOfHertlHomepage();
+		sendPhotoFromUpload(fileName, chatId);
+		File fileToDelete = new File(fileName);
+		fileToDelete.delete();
 	}
 
 	private String makingScreenshotOfHertlHomepage() {
