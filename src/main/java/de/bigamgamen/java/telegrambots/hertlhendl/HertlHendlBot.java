@@ -66,7 +66,7 @@ public class HertlHendlBot extends AbilityBot {
 	private static final String KEY_PREISE = KEY_PRE_SYMBOL+ABILTY_NAME_PREISE;
 	
 	private static final String PRICE_AS_TEXT = "1/2 Hähnchen 3,80€\n" + "Schenkel     2,00€\n" + "Brezel       0,80€\n" + "Salat        1,50€\n";
-	private static final String HENDL_PREISE_JPG = "src/main/resources/hendl_preise.jpg";
+	private static final String HENDL_PREISE_JPG = "hendl_preise.jpg";
 	private final static Logger LOG = LoggerFactory.getLogger(HertlHendlBot.class);
 	private final static String BOT_TOKEN = "";
 	private final static String BOT_USERNAME = "";
