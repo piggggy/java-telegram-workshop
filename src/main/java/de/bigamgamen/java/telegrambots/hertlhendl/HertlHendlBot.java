@@ -26,9 +26,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -37,7 +40,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.telegram.abilitybots.api.bot.AbilityBot;
 import org.telegram.abilitybots.api.db.DBContext;
-import org.telegram.abilitybots.api.db.MapDBContext;
 import org.telegram.abilitybots.api.objects.Ability;
 import org.telegram.abilitybots.api.sender.MessageSender;
 import org.telegram.abilitybots.api.sender.SilentSender;
@@ -56,43 +58,51 @@ import org.xml.sax.SAXException;
 import com.google.common.annotations.VisibleForTesting;
 
 import de.bigamgamen.java.helper.IOHelper;
+import de.bigamgamen.java.telegrambots.hertlhendl.dal.HertlBotRootDao;
+import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotBestellung;
 
 public class HertlHendlBot extends AbilityBot {
 
-	
+	private static final String ABILTY_NAME_KEYBOARD = "keyboard";
 	private static final String ABILTY_NAME_STANDORTEFOTO = "standortefoto";
 	private static final String ABILTY_NAME_PREISEFOTO = "preisefoto";
 	private static final String ABILTY_NAME_PREISE = "preise";
+	private static final String ABILTY_NAME_BESTELLUNGEN = "bestellungen";
+	private static final String ABILTY_NAME_MY_BESTELLUNGEN = "mybestellungen";
+	private static final String ABILTY_NAME_NEUE_BESTELLUNG = "neuebestellung";
+	private static final String ABILTY_NAME_OFFENE_BESTELLUNG = "offnenebestellungen";
+	private static final List<String> abilities = Arrays.asList(ABILTY_NAME_KEYBOARD,ABILTY_NAME_STANDORTEFOTO, ABILTY_NAME_PREISEFOTO,
+			ABILTY_NAME_PREISE, ABILTY_NAME_BESTELLUNGEN, ABILTY_NAME_MY_BESTELLUNGEN, ABILTY_NAME_NEUE_BESTELLUNG,
+			ABILTY_NAME_OFFENE_BESTELLUNG);
 	private static final String KEY_PRE_SYMBOL = "/";
-	private static final String KEY_STANDORTEFOTO = KEY_PRE_SYMBOL+ABILTY_NAME_STANDORTEFOTO;
-	private static final String KEY_PREISEFOTO = KEY_PRE_SYMBOL+ABILTY_NAME_PREISEFOTO;
-	private static final String KEY_PREISE = KEY_PRE_SYMBOL+ABILTY_NAME_PREISE;
-	
-	private static final String PRICE_AS_TEXT = "1/2 Hähnchen 3,80€\n" + "Schenkel     2,00€\n" + "Brezel       0,80€\n" + "Salat        1,50€\n";
+
+	private static final String PRICE_AS_TEXT = "1/2 Hähnchen 3,80€\n" + "Schenkel     2,00€\n" + "Brezel       0,80€\n"
+			+ "Salat        1,50€\n";
 	private static final String HENDL_PREISE_JPG = "hendl_preise.jpg";
 	private final static Logger LOG = LoggerFactory.getLogger(HertlHendlBot.class);
 	private final static String BOT_TOKEN = "";
 	private final static String BOT_USERNAME = "";
 	private static int CREATOR_ID = 929115416;
 	private static String HERTL_URL = "https://hertel-haehnchen.de/standplatzsuche?search=92637";
+	private static HertlBotRootDao hertlBotDao;
 
-	public static void main(String[] args)
-			throws TelegramApiRequestException, ParserConfigurationException, SAXException, IOException {
+	public static void main(String[] args) throws TelegramApiRequestException, ParserConfigurationException,
+			SAXException, IOException, URISyntaxException {
 		LOG.info("HertlHendlBot starting");
 		ApiContextInitializer.init();
-		final DBContext db = MapDBContext.onlineInstance("bot.db");
+//		final DBContext db = MapDBContext.onlineInstance("bot.db");
 		String token = args[0] != null ? args[0] : BOT_TOKEN;
 		String username = args[1] != null ? args[1] : BOT_USERNAME;
-		final HertlHendlBot bot = new HertlHendlBot(db, token, username);
+		final HertlHendlBot bot = new HertlHendlBot(token, username);
 		final TelegramBotsApi api = new TelegramBotsApi();
 		api.registerBot(bot);
 		LOG.info("HertlHendlBot successfull started");
 	}
 
-	HertlHendlBot(final DBContext db, String botToken, String botUsername)
-			throws ParserConfigurationException, SAXException, IOException {
-		super(botToken, botUsername, db);
-//		parseStandorteXML();
+	public HertlHendlBot(String botToken, String botUsername)
+			throws ParserConfigurationException, SAXException, IOException, URISyntaxException {
+		super(botToken, botUsername);
+		hertlBotDao = new HertlBotRootDao();
 	}
 
 	@Override
@@ -165,16 +175,52 @@ public class HertlHendlBot extends AbilityBot {
 		}
 	}
 
-
 	@SuppressWarnings({ "unused", "WeakerAccess" })
 	public Ability showHelp() {
-		
+
 		return Ability.builder().name("help").info("shows help").locality(ALL).privacy(PUBLIC).action(context -> {
 			final SendMessage message = new SendMessage();
 			message.setChatId(context.chatId());
-			message.setText("/preise\n" + "/preisefoto\n" + "/standortefoto\n" + "/keyboard");
+			message.setText(createAbilityListForHelp());
 			silent.execute(message);
 		}).build();
+	}
+
+//	@SuppressWarnings({ "unused", "WeakerAccess" })
+//	public Ability showBestellungen() {
+//
+//		return Ability.builder().name(ABILTY_NAME_BESTELLUNGEN).info("shows bestellungen").locality(ALL).privacy(PUBLIC)
+//				.action(context -> {
+//					final SendMessage message = new SendMessage();
+//					message.setChatId(context.chatId());
+//					message.setText(
+//							createKeyForAbility(ability) + "\n" + KEY_NEUE_BESTELLUNGEN + "\n" + KEY_OFFENE_BESTELLUNG + "\n");
+//					silent.execute(message);
+//				}).build();
+//	}
+
+	@SuppressWarnings({ "unused", "WeakerAccess" })
+	public Ability showMyBestellungen() {
+
+		return Ability.builder().name(ABILTY_NAME_MY_BESTELLUNGEN).info("Zeigt die eigenen Bestellungen").locality(ALL)
+				.privacy(PUBLIC).action(context -> {
+					final SendMessage message = new SendMessage();
+					message.setChatId(context.chatId());
+					message.setText(loadAndShowMyBestellungen(context.chatId()));
+					silent.execute(message);
+				}).build();
+	}
+
+	@SuppressWarnings({ "unused", "WeakerAccess" })
+	public Ability createNewBestellung() {
+
+		return Ability.builder().name(ABILTY_NAME_NEUE_BESTELLUNG).info("Erstellt eine neue Bestellung").locality(ALL)
+				.privacy(PUBLIC).action(context -> {
+					final SendMessage message = new SendMessage();
+					message.setChatId(context.chatId());
+					message.setText(createAndShowNewBestellung(context.chatId()));
+					silent.execute(message);
+				}).build();
 	}
 
 	@SuppressWarnings({ "unused", "WeakerAccess" })
@@ -190,9 +236,9 @@ public class HertlHendlBot extends AbilityBot {
 
 					// row 1
 					KeyboardRow row = new KeyboardRow();
-					row.add(KEY_PREISE);
-					row.add(KEY_PREISEFOTO);
-					row.add(KEY_STANDORTEFOTO);
+					row.add(createKeyForAbility(ABILTY_NAME_PREISE));
+					row.add(createKeyForAbility(ABILTY_NAME_PREISEFOTO));
+					row.add(createKeyForAbility(ABILTY_NAME_STANDORTEFOTO));
 					keyboard.add(row);
 
 					// activate the keyboard
@@ -205,33 +251,25 @@ public class HertlHendlBot extends AbilityBot {
 
 	@SuppressWarnings({ "unused", "WeakerAccess" })
 	public Ability showPreise() {
-		return Ability.builder().name(ABILTY_NAME_PREISE).info("Preisliste").locality(ALL).privacy(PUBLIC).action(context -> {
-			final SendMessage message = new SendMessage();
-			message.setChatId(context.chatId());
-			message.setText(
-					PRICE_AS_TEXT);
-			silent.execute(message);
-		}).build();
+		return Ability.builder().name(ABILTY_NAME_PREISE).info("Preisliste").locality(ALL).privacy(PUBLIC)
+				.action(context -> {
+					final SendMessage message = new SendMessage();
+					message.setChatId(context.chatId());
+					message.setText(PRICE_AS_TEXT);
+					silent.execute(message);
+				}).build();
 	}
 
 	@SuppressWarnings({ "unused", "WeakerAccess" })
 	public Ability showPreiseFoto() {
-		 return Ability
-	                .builder()
-	                .name(ABILTY_NAME_PREISEFOTO)
-	                .info("send Preisfoto")
-	                .locality(ALL)
-	                .privacy(PUBLIC)
-	                .action(context -> 
-	                sendPhotoFromUpload(HENDL_PREISE_JPG
-	                		, context.chatId()))
-	                .build();
+		return Ability.builder().name(ABILTY_NAME_PREISEFOTO).info("send Preisfoto").locality(ALL).privacy(PUBLIC)
+				.action(context -> sendPhotoFromUpload(HENDL_PREISE_JPG, context.chatId())).build();
 	}
 
 	@SuppressWarnings({ "unused", "WeakerAccess" })
 	public Ability showstandorteFoto() {
-		return Ability.builder().name(ABILTY_NAME_STANDORTEFOTO).info("standorteFoto Weiden").locality(ALL).privacy(PUBLIC)
-				.action(context -> makeScreenshotSenditDeleteit(context.chatId())).build();
+		return Ability.builder().name(ABILTY_NAME_STANDORTEFOTO).info("standorteFoto Weiden").locality(ALL)
+				.privacy(PUBLIC).action(context -> makeScreenshotSenditDeleteit(context.chatId())).build();
 	}
 
 	@SuppressWarnings({ "unused", "WeakerAccess" })
@@ -239,9 +277,8 @@ public class HertlHendlBot extends AbilityBot {
 		return Ability.builder().name("standorte").info("standorte Weiden").locality(ALL).privacy(PUBLIC)
 				.action(context -> sendPhotoFromUpload("", context.chatId())).build();
 	}
-	
-	private void makeScreenshotSenditDeleteit(Long chatId)
-	{
+
+	private void makeScreenshotSenditDeleteit(Long chatId) {
 		String fileName = makingScreenshotOfHertlHomepage();
 		sendPhotoFromUpload(fileName, chatId);
 		File fileToDelete = new File(fileName);
@@ -333,50 +370,31 @@ public class HertlHendlBot extends AbilityBot {
 		return alle;
 	}
 
-//	private List<String> parseStandorteXML() throws ParserConfigurationException, SAXException, IOException {
-//		// Initialize a list of employees
-//		List<String> employees = new ArrayList<String>();
-//		String employee = null;
-//
-//		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-//		DocumentBuilder builder = factory.newDocumentBuilder();
-//	      Document document = builder.parse(loadHertlUrl());
-////		Document document = builder.parse(HERTL_URL);
-//		document.getDocumentElement().normalize();
-//		NodeList nList = document.getElementsByTagName("searchresult");
-//		for (int temp = 0; temp < nList.getLength(); temp++) {
-//			Node node = nList.item(temp);
-//			if (node.getNodeType() == Node.ELEMENT_NODE) {
-//				Element eElement = (Element) node;
-//				// Create new Employee Object
-////	            employee = new Employee();
-////	            employee.setId(Integer.parseInt(eElement.getAttribute("id")));
-////	            employee.setFirstName(eElement.getElementsByTagName("firstName").item(0).getTextContent());
-////	            employee.setLastName(eElement.getElementsByTagName("lastName").item(0).getTextContent());
-////	            employee.setLocation(eElement.getElementsByTagName("location").item(0).getTextContent());
-//
-//				// Add Employee to list
-//				employees.add(employee);
-//			}
-//		}
-//		return employees;
-//	}
+	public String loadAndShowMyBestellungen(Long chatId) {
 
-//	private String loadHertlUrl() throws IOException {
-//
-//
-//		        try {
-//		        	WebClient   webClient = new WebClient(BrowserVersion.FIREFOX_68);
-//		            HtmlPage page = webClient.getPage(HERTL_URL);
-//		            webClient.getOptions().setJavaScriptEnabled(true);
-//		            webClient.waitForBackgroundJavaScript(3000);
-//		            List<HtmlAnchor> teams = (List) page.getByXPath("<span class=\"loaction\">");
-//		            System.out.println();
-//		        } catch (IOException ex ) {
-//		            ex.printStackTrace();
-//		        }
-//		        
-//		       return "works";
-//	}
+		StringBuilder sb = new StringBuilder("Ihre Bestellungen:"+System.lineSeparator());
+		HertlHendlBot.hertlBotDao.loadUser(chatId).getBestellungen()
+				.forEach(bestellung -> sb.append(bestellung.toString() + "\n"));
+		return sb.toString();
+	}
+
+	public String createAndShowNewBestellung(Long chatId) {
+
+		HertlBotBestellung bestellung = hertlBotDao.createNewBestellungForUser(chatId);
+
+		return bestellung.toString();
+	}
+	
+	private String createAbilityListForHelp()
+	{
+		StringBuilder sb = new StringBuilder();
+		abilities.forEach(ability -> sb.append(createKeyForAbility(ability)+System.lineSeparator()));
+		return sb.toString();
+	}
+	
+	private String createKeyForAbility(String ability)
+	{
+		return KEY_PRE_SYMBOL+ability;
+	}
 
 }
