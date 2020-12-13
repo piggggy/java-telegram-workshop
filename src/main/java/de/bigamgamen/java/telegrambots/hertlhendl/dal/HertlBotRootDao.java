@@ -32,7 +32,6 @@ public class HertlBotRootDao {
 			final HertlBotRoot root = new HertlBotRoot();
 			storageManager.setRoot(root);
 			storageManager.storeRoot();
-
 		}
 
 		return storageManager;

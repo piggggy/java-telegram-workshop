@@ -61,6 +61,7 @@ import com.google.common.annotations.VisibleForTesting;
 import de.bigamgamen.java.helper.IOHelper;
 import de.bigamgamen.java.telegrambots.hertlhendl.dal.HertlBotRootDao;
 import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotBestellung;
+import de.bigamgamen.java.telegrambots.hertlhendl.init.InitArtikels;
 
 public class HertlHendlBot extends AbilityBot {
 
@@ -70,12 +71,13 @@ public class HertlHendlBot extends AbilityBot {
 	private static final String ABILTY_NAME_PREISE = "preise";
 	private static final String ABILTY_NAME_BESTELLUNG = "bestellung";
 	private static final String ABILTY_NAME_BESTELLUNGEN = "bestellungen";
+	private static final String ABILTY_NAME_ARTIKEL = "artikel";
 	private static final String ABILTY_NAME_MY_BESTELLUNGEN = "mybestellungen";
 	private static final String ABILTY_NAME_MY_BESTELLUNGEN_KEYBOARD = "mybestellungenkeyboard";
 	private static final String ABILTY_NAME_NEUE_BESTELLUNG = "neuebestellung";
 	private static final String ABILTY_NAME_OFFENE_BESTELLUNG = "offnenebestellungen";
 	private static final List<String> abilities = Arrays.asList(ABILTY_NAME_KEYBOARD, ABILTY_NAME_STANDORTEFOTO,
-			ABILTY_NAME_PREISEFOTO, ABILTY_NAME_PREISE, ABILTY_NAME_BESTELLUNGEN,ABILTY_NAME_MY_BESTELLUNGEN_KEYBOARD, ABILTY_NAME_BESTELLUNG,
+			ABILTY_NAME_PREISEFOTO, ABILTY_NAME_PREISE,ABILTY_NAME_ARTIKEL, ABILTY_NAME_BESTELLUNGEN,ABILTY_NAME_MY_BESTELLUNGEN_KEYBOARD, ABILTY_NAME_BESTELLUNG,
 			ABILTY_NAME_MY_BESTELLUNGEN, ABILTY_NAME_NEUE_BESTELLUNG, ABILTY_NAME_OFFENE_BESTELLUNG);
 	private static final String KEY_PRE_SYMBOL = "/";
 
@@ -106,7 +108,7 @@ public class HertlHendlBot extends AbilityBot {
 			throws ParserConfigurationException, SAXException, IOException, URISyntaxException {
 		super(botToken, botUsername);
 		hertlBotDao = new HertlBotRootDao();
-	
+		InitArtikels.initArtikels(hertlBotDao);
 	}
 
 	@Override
@@ -207,6 +209,29 @@ public class HertlHendlBot extends AbilityBot {
 					message.setText(loadAndShowBestellung(context.chatId(), bestellId));
 					silent.execute(message);
 				}).build();
+	}
+	
+	@SuppressWarnings({ "unused", "WeakerAccess" })
+	public Ability showArtikel() {
+
+		return Ability
+				.builder()
+				.name(ABILTY_NAME_ARTIKEL)
+				.info("Listet alle Artikel auf")
+				.locality(ALL)
+				.privacy(PUBLIC)
+				.action(context -> {
+					final SendMessage message = new SendMessage();					
+					message.setChatId(context.chatId());
+					message.setText(loadAndShowAllArtikel());
+					silent.execute(message);
+				}).build();
+	}
+
+	private String loadAndShowAllArtikel() {
+		StringBuilder sb = new StringBuilder();
+		hertlBotDao.root().artikels().all().forEach(artikel -> sb.append(artikel.toString()).append(System.lineSeparator()));
+		return sb.toString();
 	}
 
 	@SuppressWarnings({ "unused", "WeakerAccess" })
@@ -319,23 +344,6 @@ public class HertlHendlBot extends AbilityBot {
 				.action(context -> sendPhotoFromUpload("", context.chatId())).build();
 	}
 	
-    @SuppressWarnings({"unused", "WeakerAccess"})
-    public Ability add() {
-        return Ability
-                .builder()
-                .name("add")
-                .info("adds to numbers")
-                .locality(ALL)
-                .privacy(PUBLIC)
-                .input(2)
-                .action(context -> {
-                    final int a = Integer.parseInt(context.firstArg());
-                    final int b = Integer.parseInt(context.secondArg());
-                    final int sum = a + b;
-                    silent.send(String.format("The sum of %d and %d is %d", a, b, sum), context.chatId());
-                })
-                .build();
-    }
 
 	private void makeScreenshotSenditDeleteit(Long chatId) {
 		String fileName = makingScreenshotOfHertlHomepage();
@@ -399,16 +407,6 @@ public class HertlHendlBot extends AbilityBot {
 		return "";
 
 	}
-
-//    @SuppressWarnings({"unused", "WeakerAccess"})
-//    public Ability sayNo() {
-//        return Ability.builder()
-//                .name(DEFAULT)
-//                .privacy(PUBLIC)
-//                .locality(ALL)
-//                .action(context -> silent.send("Sorry, I have no answer for you today.", context.chatId()))
-//                .build();
-//    }
 
 	@VisibleForTesting
 	void setSender(final MessageSender sender) {
@@ -476,13 +474,6 @@ public class HertlHendlBot extends AbilityBot {
 				+ System.lineSeparator();
 	}
 
-//	private int getIndexFromBestellungAbilityStr(String bestellungAbilityStr) {
-//		String bestellIndex = bestellungAbilityStr.replace(ABILTY_NAME_BESTELLUNG, "").trim();
-//		if (NumberUtils.isDigits(bestellIndex)) {
-//			return Integer.parseInt(bestellIndex);
-//		}
-//
-//		throw new RuntimeException(bestellIndex + " is not a Number");
-//	}
+	
 
 }

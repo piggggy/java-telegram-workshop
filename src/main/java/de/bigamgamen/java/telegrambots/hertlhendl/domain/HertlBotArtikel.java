@@ -2,6 +2,8 @@ package de.bigamgamen.java.telegrambots.hertlhendl.domain;
 
 import java.math.BigInteger;
 
+import de.bigamgamen.java.helper.Pricehelper;
+
 public class HertlBotArtikel {
 	private String name;
 	private BigInteger priceInCent;
@@ -14,6 +16,11 @@ public class HertlBotArtikel {
 		super();
 		this.name = name;
 		this.priceInCent = priceInCent;
+	}
+	
+	@Override
+	public String toString() {		
+		return this.name + ": " + Pricehelper.getPriceAsEuroString(priceInCent);
 	}
 
 	public String getName() {
