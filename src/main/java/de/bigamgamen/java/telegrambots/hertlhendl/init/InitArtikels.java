@@ -17,11 +17,11 @@ public class InitArtikels {
 	{
 		List<HertlBotArtikel> artikelList= new ArrayList<>();
 		
-		artikelList.add(new HertlBotArtikel("1/2 Hähnchen", BigInteger.valueOf(380L)));
-		artikelList.add(new HertlBotArtikel("Schenkel", BigInteger.valueOf(200L)));
-		artikelList.add(new HertlBotArtikel("Krautsalat", BigInteger.valueOf(150L)));	
-		artikelList.add(new HertlBotArtikel("Brezel klein", BigInteger.valueOf(80L)));
-		artikelList.add(new HertlBotArtikel("Brezel groß", BigInteger.valueOf(160L)));
+		artikelList.add(new HertlBotArtikel(1,"1/2 Hähnchen", BigInteger.valueOf(380L)));
+		artikelList.add(new HertlBotArtikel(2,"Schenkel", BigInteger.valueOf(200L)));
+		artikelList.add(new HertlBotArtikel(3,"Krautsalat", BigInteger.valueOf(150L)));	
+		artikelList.add(new HertlBotArtikel(4,"Brezel klein", BigInteger.valueOf(80L)));
+		artikelList.add(new HertlBotArtikel(5,"Brezel groß", BigInteger.valueOf(160L)));
 		
 		dao.root().artikels().addAll(artikelList);
 	

@@ -60,6 +60,7 @@ import com.google.common.annotations.VisibleForTesting;
 
 import de.bigamgamen.java.helper.IOHelper;
 import de.bigamgamen.java.telegrambots.hertlhendl.dal.HertlBotRootDao;
+import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotArtikel;
 import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotBestellung;
 import de.bigamgamen.java.telegrambots.hertlhendl.init.InitArtikels;
 
@@ -72,6 +73,7 @@ public class HertlHendlBot extends AbilityBot {
 	private static final String ABILTY_NAME_BESTELLUNG = "bestellung";
 	private static final String ABILTY_NAME_BESTELLUNGEN = "bestellungen";
 	private static final String ABILTY_NAME_ARTIKEL = "artikel";
+	private static final String ABILTY_NAME_ADD_POSITION = "addposition";
 	private static final String ABILTY_NAME_MY_BESTELLUNGEN = "mybestellungen";
 	private static final String ABILTY_NAME_MY_BESTELLUNGEN_KEYBOARD = "mybestellungenkeyboard";
 	private static final String ABILTY_NAME_NEUE_BESTELLUNG = "neuebestellung";
@@ -206,7 +208,15 @@ public class HertlHendlBot extends AbilityBot {
 					int bestellId = Integer.parseInt(context.firstArg());
 					final SendMessage message = new SendMessage();					
 					message.setChatId(context.chatId());
-					message.setText(loadAndShowBestellung(context.chatId(), bestellId));
+					message.setText("Füge Positionen zu deiner Bestellung hinzu");
+					
+					final ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+					final List<KeyboardRow> keyboard = loadAndShowAllArtikelForBestellung(context.chatId(), bestellId);
+
+					// activate the keyboard
+					keyboardMarkup.setKeyboard(keyboard);
+					message.setReplyMarkup(keyboardMarkup);
+					
 					silent.execute(message);
 				}).build();
 	}
@@ -228,11 +238,7 @@ public class HertlHendlBot extends AbilityBot {
 				}).build();
 	}
 
-	private String loadAndShowAllArtikel() {
-		StringBuilder sb = new StringBuilder();
-		hertlBotDao.root().artikels().all().forEach(artikel -> sb.append(artikel.toString()).append(System.lineSeparator()));
-		return sb.toString();
-	}
+	
 
 	@SuppressWarnings({ "unused", "WeakerAccess" })
 	public Ability showMyBestellungen() {
@@ -474,6 +480,29 @@ public class HertlHendlBot extends AbilityBot {
 				+ System.lineSeparator();
 	}
 
+	private String loadAndShowAllArtikel() {
+		StringBuilder sb = new StringBuilder();
+		hertlBotDao.root().artikels().all().forEach(artikel -> sb.append(artikel.toString()).append(System.lineSeparator()));
+		return sb.toString();
+	}
+	
+	private List<KeyboardRow> loadAndShowAllArtikelForBestellung(Long chatId, Integer bestellungId) {
+		List<KeyboardRow> keyboard = new ArrayList<>(); 
+				KeyboardRow row = new KeyboardRow();
+		
+				hertlBotDao.root().artikels().all().forEach(artikel  -> row.add(createAddPositiontoBestellungLink(artikel, bestellungId)) );
+		
+		
+		keyboard.add(row);
+		
+		return keyboard;
+	}
+	
+	private String createAddPositiontoBestellungLink(HertlBotArtikel artikel, Integer bestellungId) {
+		return createKeyForAbility(ABILTY_NAME_ADD_POSITION)+" " + artikel.getName() + " " + bestellungId
+				+ System.lineSeparator();
+	}
+	
 	
 
 }

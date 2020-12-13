@@ -5,6 +5,7 @@ import java.math.BigInteger;
 import de.bigamgamen.java.helper.Pricehelper;
 
 public class HertlBotArtikel {
+	private int id;
 	private String name;
 	private BigInteger priceInCent;
 
@@ -12,8 +13,9 @@ public class HertlBotArtikel {
 
 	}
 
-	public HertlBotArtikel(String name, BigInteger priceInCent) {
+	public HertlBotArtikel(int id, String name, BigInteger priceInCent) {
 		super();
+		this.id = id;
 		this.name = name;
 		this.priceInCent = priceInCent;
 	}
@@ -37,6 +39,10 @@ public class HertlBotArtikel {
 
 	public void setPriceInCent(BigInteger priceInCent) {
 		this.priceInCent = priceInCent;
+	}
+
+	public int getId() {
+		return id;
 	}
 
 }
