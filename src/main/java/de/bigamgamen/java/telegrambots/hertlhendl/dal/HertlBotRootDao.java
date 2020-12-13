@@ -4,6 +4,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Optional;
 
@@ -36,6 +37,12 @@ public class HertlBotRootDao
 		return root;
 	}
 	
+	public HertlBotBestellung loadBestellung(Long chatId, int bestellId) {
+		HertlBotUser user = loadUser(chatId);
+		
+		return user.getBestellungen().stream().filter(bestellung -> bestellung.getIndex() == bestellId).findFirst().get();
+	}
+	
 	public HertlBotUser loadUser(Long chatId) {
 		
 		Optional<HertlBotUser> userOpt = getRoot()
@@ -60,9 +67,10 @@ public class HertlBotRootDao
 	public HertlBotBestellung createNewBestellungForUser(Long chatId)
 	{
 		HertlBotUser user = this.loadUser(chatId);
-		HertlBotBestellung bestellung = new HertlBotBestellung(user, Collections.emptyList());
-		user.getBestellungen().add(bestellung);
-		this.storageManager.storeRoot();
+		HertlBotBestellung bestellung = new HertlBotBestellung(user, new ArrayList<>());
+		user.addBestellung(bestellung);
+		this.storageManager.store(bestellung);
+		this.storageManager.store(user);
 		
 		return bestellung;
 		

@@ -655,7 +655,7 @@ public Ability add() {
   return Ability
       .builder()
       .name("add")
-      .info("adds to numbers")
+      .info("adds two numbers")
       .locality(ALL)
       .privacy(PUBLIC)
       .input(2)

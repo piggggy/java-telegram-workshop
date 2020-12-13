@@ -56,7 +56,7 @@ public class WorkshopBotTest {
     public void sayHelloWorld() throws TelegramApiException {
         final Update mockedUpdate = mock(Update.class);
         final User user = new User(USER_ID, "Foo", false, "Bar", "foobar42", "en");
-        final MessageContext context = MessageContext.newContext(mockedUpdate, user, CHAT_ID);
+        final MessageContext context = MessageContext.newContext(mockedUpdate, user, CHAT_ID, bot, null);
 
         bot.sayHelloWorld().action().accept(context);
 

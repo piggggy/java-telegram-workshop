@@ -13,6 +13,13 @@ public class HertlBotUser {
 		
 	}
 	
+	public synchronized void addBestellung(HertlBotBestellung bestellung)
+	{
+		bestellung.setUser(this);
+		this.bestellungen.add(bestellung);
+		bestellung.setIndex(this.bestellungen.indexOf(bestellung));
+	}
+	
 	public boolean isRightUser(Long chatId)
 	{
 		return this.chatId.equals(chatId);
@@ -23,11 +30,7 @@ public class HertlBotUser {
 	}
 
 	public List<HertlBotBestellung> getBestellungen() {
-		return bestellungen;
-	}
-
-	public void setBestellungen(List<HertlBotBestellung> bestellungen) {
-		this.bestellungen = bestellungen;
+		return new ArrayList<>(bestellungen);
 	}
 	
 	public void setChatId(Long chatId) {
