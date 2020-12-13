@@ -61,7 +61,7 @@ public class HertlBotUsers {
 
 	public Optional<HertlBotUser> ofId(final long chatId)
 	{
-		return Optional.of(this.users.get(chatId));
+		return Optional.ofNullable(this.users.get(chatId));
 	}
 	
 	

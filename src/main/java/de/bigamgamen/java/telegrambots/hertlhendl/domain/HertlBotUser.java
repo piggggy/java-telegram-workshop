@@ -18,9 +18,8 @@ public class HertlBotUser {
 	{
 		bestellung.setUser(this);
 		this.bestellungen.add(bestellung);
-		persister.store(bestellungen);
 		bestellung.setIndex(this.bestellungen.indexOf(bestellung));
-		persister.store(bestellung);
+		persister.store(bestellungen);
 	}
 	
 	public boolean isRightUser(Long chatId)
