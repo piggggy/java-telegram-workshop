@@ -4,19 +4,20 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class HertlBotRoot {
-	private Set<HertlBotUser> users = new HashSet<>();
+	private HertlBotUsers users = new HertlBotUsers();
+	private HertlBotArtikels artikels = new HertlBotArtikels();
 	
 	public HertlBotRoot()
 	{
 		
 	}
 
-	public Set<HertlBotUser> getUsers() {
+	public HertlBotUsers users() {
 		return users;
 	}
 
-	public void setUsers(Set<HertlBotUser> users) {
-		this.users = users;
+	public HertlBotArtikels artikels() {
+		return artikels;
 	}
 
 }

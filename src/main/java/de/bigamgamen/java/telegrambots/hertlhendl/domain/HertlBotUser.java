@@ -1,8 +1,9 @@
 package de.bigamgamen.java.telegrambots.hertlhendl.domain;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+
+import one.microstream.persistence.types.Persister;
 
 public class HertlBotUser {
 
@@ -13,11 +14,13 @@ public class HertlBotUser {
 		
 	}
 	
-	public synchronized void addBestellung(HertlBotBestellung bestellung)
+	public synchronized void addBestellung(HertlBotBestellung bestellung, final Persister persister)
 	{
 		bestellung.setUser(this);
 		this.bestellungen.add(bestellung);
+		persister.store(bestellungen);
 		bestellung.setIndex(this.bestellungen.indexOf(bestellung));
+		persister.store(bestellung);
 	}
 	
 	public boolean isRightUser(Long chatId)

@@ -1,84 +1,81 @@
 package de.bigamgamen.java.telegrambots.hertlhendl.dal;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Optional;
 
 import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotBestellung;
 import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotRoot;
 import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotUser;
-import one.microstream.storage.types.EmbeddedStorage;
+import one.microstream.storage.configuration.Configuration;
+import one.microstream.storage.types.EmbeddedStorageFoundation;
 import one.microstream.storage.types.EmbeddedStorageManager;
 
-public class HertlBotRootDao 
-{
-	private final Path DEFAULT_PATH;
-	
-	// Initialize a storage manager ("the database") with purely defaults.
-	private final EmbeddedStorageManager storageManager;
+public class HertlBotRootDao {
 
-	public HertlBotRootDao() throws URISyntaxException {
-		DEFAULT_PATH = Paths.get("microStream.db");
-		storageManager = EmbeddedStorage.start(DEFAULT_PATH);
+	private final static EmbeddedStorageManager storageManager = createStorageManager();
+
+	public HertlBotRootDao() {
+
 	}
 
-	public HertlBotRoot getRoot() {
-		HertlBotRoot root = (HertlBotRoot) this.storageManager.root(); 
-		if(root == null)
-		{
-			root = new HertlBotRoot();
-			this.storageManager.setRoot(root);
-			this.storageManager.storeRoot();
+	private static EmbeddedStorageManager createStorageManager() {
+		final Configuration configuration = Configuration.Default();
+		configuration.setBaseDirectory(Paths.get("data", "storage").toString());
+		configuration.setChannelCount(2);
+
+		final EmbeddedStorageFoundation<?> foundation = configuration.createEmbeddedStorageFoundation();
+
+		final EmbeddedStorageManager storageManager = foundation.createEmbeddedStorageManager().start();
+
+		if (storageManager.root() == null) {
+			final HertlBotRoot root = new HertlBotRoot();
+			storageManager.setRoot(root);
+			storageManager.storeRoot();
+
 		}
-		return root;
+
+		return storageManager;
 	}
-	
+
+	public static EmbeddedStorageManager storageManager() {
+		return storageManager;
+	}
+
+	public HertlBotRoot root() {
+		return (HertlBotRoot) storageManager().root();
+	}
+
 	public HertlBotBestellung loadBestellung(Long chatId, int bestellId) {
 		HertlBotUser user = loadUser(chatId);
-		
-		return user.getBestellungen().stream().filter(bestellung -> bestellung.getIndex() == bestellId).findFirst().get();
+
+		return user.getBestellungen().stream().filter(bestellung -> bestellung.getIndex() == bestellId).findFirst()
+				.get();
 	}
-	
+
 	public HertlBotUser loadUser(Long chatId) {
-		
-		Optional<HertlBotUser> userOpt = getRoot()
-				.getUsers()
-				.stream()
-				.filter(user -> user.getChatId().equals(chatId)).findFirst();
-		
-		if(userOpt.isPresent())
-		{
+
+		Optional<HertlBotUser> userOpt = root().users().ofId(chatId);
+
+		if (userOpt.isPresent()) {
 			return userOpt.get();
 		}
-		
-		HertlBotUser user = new HertlBotUser(
-				chatId);
-		getRoot()
-		.getUsers()
-		.add(user);
-		storageManager.storeRoot();
+
+		HertlBotUser user = new HertlBotUser(chatId);
+		root().users().add(user, storageManager());
 		return user;
 	}
-	
-	public HertlBotBestellung createNewBestellungForUser(Long chatId)
-	{
+
+	public HertlBotBestellung createNewBestellungForUser(Long chatId) {
 		HertlBotUser user = this.loadUser(chatId);
 		HertlBotBestellung bestellung = new HertlBotBestellung(user, new ArrayList<>());
-		user.addBestellung(bestellung);
-		this.storageManager.store(bestellung);
-		this.storageManager.store(user);
-		
-		this.storageManager.storeRoot();
-		
+		user.addBestellung(bestellung, this.storageManager);
+
 		return bestellung;
-		
 	}
+
 	public void shutDown() {
-		
+
 		this.storageManager.shutdown();
 	}
 
