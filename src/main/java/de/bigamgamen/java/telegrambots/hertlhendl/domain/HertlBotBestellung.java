@@ -33,7 +33,7 @@ public class HertlBotBestellung {
 	
 	@Override
 	public String toString() {
-		StringBuilder sb = new StringBuilder(BESTELLUNG_TITLE);
+		StringBuilder sb = new StringBuilder(BESTELLUNG_TITLE + " " +this.index);
 		sb.append("Vom: "+getBestellDatumFormated()+System.lineSeparator());
 		this.positionen.forEach(pos -> sb.append(pos.toString()+System.lineSeparator()));
 		sb.append("Summe: "+ getSumme());

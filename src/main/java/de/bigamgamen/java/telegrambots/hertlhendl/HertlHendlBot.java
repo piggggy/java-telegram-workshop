@@ -71,10 +71,11 @@ public class HertlHendlBot extends AbilityBot {
 	private static final String ABILTY_NAME_BESTELLUNG = "bestellung";
 	private static final String ABILTY_NAME_BESTELLUNGEN = "bestellungen";
 	private static final String ABILTY_NAME_MY_BESTELLUNGEN = "mybestellungen";
+	private static final String ABILTY_NAME_MY_BESTELLUNGEN_KEYBOARD = "mybestellungenkeyboard";
 	private static final String ABILTY_NAME_NEUE_BESTELLUNG = "neuebestellung";
 	private static final String ABILTY_NAME_OFFENE_BESTELLUNG = "offnenebestellungen";
 	private static final List<String> abilities = Arrays.asList(ABILTY_NAME_KEYBOARD, ABILTY_NAME_STANDORTEFOTO,
-			ABILTY_NAME_PREISEFOTO, ABILTY_NAME_PREISE, ABILTY_NAME_BESTELLUNGEN, ABILTY_NAME_BESTELLUNG,
+			ABILTY_NAME_PREISEFOTO, ABILTY_NAME_PREISE, ABILTY_NAME_BESTELLUNGEN,ABILTY_NAME_MY_BESTELLUNGEN_KEYBOARD, ABILTY_NAME_BESTELLUNG,
 			ABILTY_NAME_MY_BESTELLUNGEN, ABILTY_NAME_NEUE_BESTELLUNG, ABILTY_NAME_OFFENE_BESTELLUNG);
 	private static final String KEY_PRE_SYMBOL = "/";
 
@@ -221,6 +222,32 @@ public class HertlHendlBot extends AbilityBot {
 					final SendMessage message = new SendMessage();					
 					message.setChatId(context.chatId());
 					message.setText(loadAndShowMyBestellungen(context.chatId()));
+				
+					silent.execute(message);
+				}).build();
+	}
+	
+	@SuppressWarnings({ "unused", "WeakerAccess" })
+	public Ability showMyBestellungenKeyBoard() {
+
+		return Ability
+				.builder()
+				.name(ABILTY_NAME_MY_BESTELLUNGEN_KEYBOARD)
+				.info("Zeigt die eigenen Bestellungen als keyboard")
+				.locality(ALL)
+				.privacy(PUBLIC)
+				.action(context -> {					
+					final SendMessage message = new SendMessage();					
+					message.setChatId(context.chatId());
+					message.setText("Öffne die Bestellungen über die Tastatur");
+					
+					final ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+					final List<KeyboardRow> keyboard = loadAndShowMyBestellungenAsKeyBoard(context.chatId());
+
+					// activate the keyboard
+					keyboardMarkup.setKeyboard(keyboard);
+					message.setReplyMarkup(keyboardMarkup);
+					
 					silent.execute(message);
 				}).build();
 	}
@@ -413,6 +440,18 @@ public class HertlHendlBot extends AbilityBot {
 		HertlHendlBot.hertlBotDao.loadUser(chatId).getBestellungen()
 				.forEach(bestellung -> sb.append(createBestellungLink(bestellung)));
 		return sb.toString();
+	}
+	
+	public List<KeyboardRow> loadAndShowMyBestellungenAsKeyBoard(Long chatId) {
+		List<KeyboardRow> keyboard = new ArrayList<>(); 
+				KeyboardRow row = new KeyboardRow();
+		
+		HertlHendlBot.hertlBotDao.loadUser(chatId).getBestellungen()
+				.forEach(bestellung -> row.add(createBestellungLink(bestellung)));		
+		
+		keyboard.add(row);
+		
+		return keyboard;
 	}
 
 	public String createAndShowNewBestellung(Long chatId) {

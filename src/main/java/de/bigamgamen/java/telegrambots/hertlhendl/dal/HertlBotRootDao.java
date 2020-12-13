@@ -72,6 +72,8 @@ public class HertlBotRootDao
 		this.storageManager.store(bestellung);
 		this.storageManager.store(user);
 		
+		this.storageManager.storeRoot();
+		
 		return bestellung;
 		
 	}
