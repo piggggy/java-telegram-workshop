@@ -6,6 +6,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import de.bigamgamen.java.helper.Pricehelper;
+import one.microstream.persistence.types.Persister;
 
 public class HertlBotBestellung {
 	
@@ -24,6 +25,12 @@ public class HertlBotBestellung {
 		this.bestellDatum = LocalDate.now();
 		this.user = user;
 		this.positionen = positionen;
+	}
+	
+	public synchronized void addPosition(HertlBotPosition position, final Persister persister)
+	{
+		positionen.add(position);		
+		persister.store(positionen);
 	}
 	
 

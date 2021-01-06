@@ -26,17 +26,18 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.math.BigInteger;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
+import javax.swing.text.Position;
+import javax.validation.constraints.PositiveOrZero;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.telegram.abilitybots.api.bot.AbilityBot;
@@ -53,15 +54,16 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException;
-import org.telegram.telegrambots.meta.generics.BotSession;
 import org.xml.sax.SAXException;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.math.BigIntegerMath;
 
 import de.bigamgamen.java.helper.IOHelper;
 import de.bigamgamen.java.telegrambots.hertlhendl.dal.HertlBotRootDao;
 import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotArtikel;
 import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotBestellung;
+import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotPosition;
 import de.bigamgamen.java.telegrambots.hertlhendl.init.InitArtikels;
 
 public class HertlHendlBot extends AbilityBot {
@@ -216,6 +218,38 @@ public class HertlHendlBot extends AbilityBot {
 					// activate the keyboard
 					keyboardMarkup.setKeyboard(keyboard);
 					message.setReplyMarkup(keyboardMarkup);
+					
+					silent.execute(message);
+				}).build();
+	}
+	
+	@SuppressWarnings({ "unused", "WeakerAccess" })
+	public Ability addPositionToBestellung() {
+
+		return Ability
+				.builder()
+				.name(ABILTY_NAME_ADD_POSITION)
+				.info("Fügt zu einer Bestellung eine neue Position hinzu")
+				.locality(ALL)
+				.privacy(PUBLIC)
+				.input(2)
+				.action(context -> {
+					Long chatId = context.chatId();
+					int artikelId = Integer.parseInt(context.firstArg());
+					int bestellId = Integer.parseInt(context.secondArg());
+					
+					HertlBotBestellung bestellung = hertlBotDao.loadBestellung(chatId, bestellId);
+					HertlBotArtikel artikel = hertlBotDao.root().artikels().ofId(artikelId);
+					
+					HertlBotPosition position = new HertlBotPosition(BigInteger.ONE,artikel); 
+					
+					bestellung.addPosition(position, HertlBotRootDao.storageManager());
+					
+					final SendMessage message = new SendMessage();					
+					message.setChatId(context.chatId());
+					message.setText(artikel.getName() + " wurde " + position.getMenge() + "-mal zu deiner Bestellung hinzugefügt");
+					
+					
 					
 					silent.execute(message);
 				}).build();
@@ -490,7 +524,7 @@ public class HertlHendlBot extends AbilityBot {
 		List<KeyboardRow> keyboard = new ArrayList<>(); 
 				KeyboardRow row = new KeyboardRow();
 		
-				hertlBotDao.root().artikels().all().forEach(artikel  -> row.add(createAddPositiontoBestellungLink(artikel, bestellungId)) );
+				hertlBotDao.root().artikels().all().forEach(artikel  -> row.add(createAddPositionToBestellungLink(artikel, bestellungId)) );
 		
 		
 		keyboard.add(row);
@@ -498,9 +532,8 @@ public class HertlHendlBot extends AbilityBot {
 		return keyboard;
 	}
 	
-	private String createAddPositiontoBestellungLink(HertlBotArtikel artikel, Integer bestellungId) {
-		return createKeyForAbility(ABILTY_NAME_ADD_POSITION)+" " + artikel.getName() + " " + bestellungId
-				+ System.lineSeparator();
+	private String createAddPositionToBestellungLink(HertlBotArtikel artikel, Integer bestellungId) {
+		return createKeyForAbility(ABILTY_NAME_ADD_POSITION)+ " " + artikel.getId()+ " " + bestellungId + " " + artikel.getName() + System.lineSeparator();
 	}
 	
 	

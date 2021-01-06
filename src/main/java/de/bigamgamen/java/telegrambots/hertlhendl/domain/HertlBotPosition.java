@@ -4,17 +4,22 @@ import java.math.BigInteger;
 
 public class HertlBotPosition {
 	private BigInteger menge;
-	private HertlBotArtikel artikel; 
-	
+	private HertlBotArtikel artikel;
+
 	public HertlBotPosition() {
-		
+
 	}
-	
-	public BigInteger getPositionPrice ()
-	{
+
+	public HertlBotPosition(BigInteger menge, HertlBotArtikel artikel) {
+		this.menge = menge;
+		this.artikel = artikel;
+
+	}
+
+	public BigInteger getPositionPrice() {
 		return artikel.getPriceInCent().multiply(menge);
 	}
-	
+
 	public BigInteger getMenge() {
 		return menge;
 	}
@@ -31,6 +36,4 @@ public class HertlBotPosition {
 		this.artikel = artikel;
 	}
 
-	
-	
 }
