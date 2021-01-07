@@ -29,7 +29,8 @@ public class HertlBotBestellung {
 	
 	public synchronized void addPosition(HertlBotPosition position, final Persister persister)
 	{
-		positionen.add(position);		
+		positionen.add(position);	
+		persister.store(position);
 		persister.store(positionen);
 	}
 	
@@ -48,8 +49,11 @@ public class HertlBotBestellung {
 	}
 	
 	private String getSumme() {
-		BigInteger summe = new BigInteger("0");
-		this.positionen.forEach(pos -> summe.add(pos.getPositionPrice()));
+		 BigInteger summe = new BigInteger("0");
+		for(HertlBotPosition pos : positionen)
+		{
+			summe = summe.add(pos.getPositionPrice());
+		}
 		return Pricehelper.getPriceAsEuroString(summe);
 	}
 

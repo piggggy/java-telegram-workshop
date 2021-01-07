@@ -208,9 +208,13 @@ public class HertlHendlBot extends AbilityBot {
 				.input(1)
 				.action(context -> {
 					int bestellId = Integer.parseInt(context.firstArg());
+					Long chatId = context.chatId();
+					HertlBotBestellung bestellung = hertlBotDao.loadBestellung(chatId, bestellId);
 					final SendMessage message = new SendMessage();					
-					message.setChatId(context.chatId());
-					message.setText("Füge Positionen zu deiner Bestellung hinzu");
+					message.setChatId(chatId);
+					String messageText = bestellung.toString() + System.lineSeparator() + "Füge Positionen zu deiner Bestellung hinzu";
+					
+					message.setText(messageText);
 					
 					final ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
 					final List<KeyboardRow> keyboard = loadAndShowAllArtikelForBestellung(context.chatId(), bestellId);
@@ -232,7 +236,7 @@ public class HertlHendlBot extends AbilityBot {
 				.info("Fügt zu einer Bestellung eine neue Position hinzu")
 				.locality(ALL)
 				.privacy(PUBLIC)
-				.input(2)
+				.input(3)
 				.action(context -> {
 					Long chatId = context.chatId();
 					int artikelId = Integer.parseInt(context.firstArg());
@@ -248,8 +252,6 @@ public class HertlHendlBot extends AbilityBot {
 					final SendMessage message = new SendMessage();					
 					message.setChatId(context.chatId());
 					message.setText(artikel.getName() + " wurde " + position.getMenge() + "-mal zu deiner Bestellung hinzugefügt");
-					
-					
 					
 					silent.execute(message);
 				}).build();
@@ -526,14 +528,13 @@ public class HertlHendlBot extends AbilityBot {
 		
 				hertlBotDao.root().artikels().all().forEach(artikel  -> row.add(createAddPositionToBestellungLink(artikel, bestellungId)) );
 		
-		
 		keyboard.add(row);
 		
 		return keyboard;
 	}
 	
 	private String createAddPositionToBestellungLink(HertlBotArtikel artikel, Integer bestellungId) {
-		return createKeyForAbility(ABILTY_NAME_ADD_POSITION)+ " " + artikel.getId()+ " " + bestellungId + " " + artikel.getName() + System.lineSeparator();
+		return createKeyForAbility(ABILTY_NAME_ADD_POSITION)+ " " + artikel.getId()+ " " + bestellungId + " \"" + artikel.getName() +"\""+ System.lineSeparator();
 	}
 	
 	

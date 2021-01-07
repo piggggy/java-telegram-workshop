@@ -13,7 +13,12 @@ public class HertlBotPosition {
 	public HertlBotPosition(BigInteger menge, HertlBotArtikel artikel) {
 		this.menge = menge;
 		this.artikel = artikel;
-
+	}
+	
+	@Override
+	public String toString() {
+		String positionString = menge + "-mal "+ artikel.getName();
+		return positionString;
 	}
 
 	public BigInteger getPositionPrice() {
