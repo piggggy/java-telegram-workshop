@@ -1,14 +1,10 @@
-= Java & Telegram ChatBot Workshop
+= Telegram ChatBot For Order things in Small Groups
 ifdef::env-github[:outfilesuffix: .adoc]
 
-image:https://travis-ci.org/chatbot-workshop/java-telegram-workshop.svg?branch=master["Build Status", link="https://travis-ci.org/chatbot-workshop/java-telegram-workshop"]
-image:https://img.shields.io/badge/gitmoji-%20😜%20😍-FFDD67.svg["gitmoji", link="https://gitmoji.carloscuesta.me"]
-
-*This repository is part of the chat bot workshop with https://www.fihlon.ch/[Marcus Fihlon].*
 
 == Copyright and Licensing
 
-Copyright (C) 2018 Marcus Fihlon
+Copyright (C) 2018 Arne Meier
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
