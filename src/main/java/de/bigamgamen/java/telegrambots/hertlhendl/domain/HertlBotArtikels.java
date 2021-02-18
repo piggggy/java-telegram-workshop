@@ -13,7 +13,7 @@ import one.microstream.persistence.types.Persister;
 
 public class HertlBotArtikels {
 
-	private final Map<Integer, HertlBotArtikel> artikels = new HashMap<>();
+	private final Map<String, HertlBotArtikel> artikels = new HashMap<>();
 
 	public HertlBotArtikels() {
 		super();
@@ -26,7 +26,7 @@ public class HertlBotArtikels {
 		final Persister persister
 	)
 	{
-		this.artikels.put(artikel.getId(), artikel);
+		this.artikels.put(artikel.getName(), artikel);
 		persister.store(this.artikels);
 	}
 
@@ -42,7 +42,7 @@ public class HertlBotArtikels {
 	{
 		this.artikels.putAll(
 				artikels.stream().collect(
-				Collectors.toMap(HertlBotArtikel::getId, Function.identity())
+				Collectors.toMap(HertlBotArtikel::getName, Function.identity())
 			)
 		);
 		persister.store(this.artikels);
@@ -58,9 +58,9 @@ public class HertlBotArtikels {
 		return new ArrayList<>(this.artikels.values());
 	}
 
-	public HertlBotArtikel ofId(final Integer artikelId)
+	public HertlBotArtikel ofName(final String artikelName)
 	{
-		return this.artikels.get(artikelId);
+		return this.artikels.get(artikelName);
 	}
 	
 	
