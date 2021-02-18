@@ -13,9 +13,9 @@ public class InitArtikels {
 		
 	}
 	
-	public synchronized static void initArtikels(HertlBotRootDao dao)
+	public synchronized static void initArtikels(final HertlBotRootDao dao)
 	{
-		List<HertlBotArtikel> artikelList= new ArrayList<>();
+		final List<HertlBotArtikel> artikelList= new ArrayList<>();
 		
 		artikelList.add(new HertlBotArtikel(1,"1/2-Hähnchen", BigInteger.valueOf(380L)));
 		artikelList.add(new HertlBotArtikel(2,"Hähnchen-Schenkel", BigInteger.valueOf(200L)));

@@ -3,9 +3,10 @@ package de.bigamgamen.java.telegrambots.hertlhendl.domain;
 import java.math.BigInteger;
 
 public class HertlBotPosition {
-	private BigInteger menge;
+	private BigInteger menge = BigInteger.valueOf(1L);
 	private HertlBotArtikel artikel;
-
+	private HertlBotBestellung bestelllung;
+	
 	public HertlBotPosition() {
 
 	}
@@ -26,19 +27,31 @@ public class HertlBotPosition {
 	}
 
 	public BigInteger getMenge() {
-		return menge;
+		return this.menge;
 	}
 
-	public void setMenge(BigInteger menge) {
+	public void setMenge(final BigInteger menge) {
 		this.menge = menge;
 	}
 
 	public HertlBotArtikel getArtikel() {
-		return artikel;
+		return this.artikel;
 	}
 
-	public void setArtikel(HertlBotArtikel artikel) {
+	public void setArtikel(final HertlBotArtikel artikel) {
 		this.artikel = artikel;
 	}
 
+	public HertlBotBestellung getBestelllung()
+	{
+		return this.bestelllung;
+	}
+
+	public void setBestelllung(final HertlBotBestellung bestelllung)
+	{
+		this.bestelllung = bestelllung;
+	}
+
+	
+	
 }
