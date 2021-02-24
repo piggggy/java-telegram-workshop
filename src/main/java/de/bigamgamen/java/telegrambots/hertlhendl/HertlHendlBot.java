@@ -44,16 +44,17 @@ import org.telegram.abilitybots.api.bot.AbilityBot;
 import org.telegram.abilitybots.api.objects.Ability;
 import org.telegram.abilitybots.api.sender.MessageSender;
 import org.telegram.abilitybots.api.sender.SilentSender;
-import org.telegram.telegrambots.ApiContextInitializer;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.PhotoSize;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException;
+import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import org.xml.sax.SAXException;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -107,16 +108,16 @@ public class HertlHendlBot extends AbilityBot
 	private static String HERTL_URL = "https://hertel-haehnchen.de/standplatzsuche?search=92637";
 	private static HertlBotRootDao hertlBotDao;
 	
-	public static void main(final String[] args) throws TelegramApiRequestException, ParserConfigurationException,
-		SAXException, IOException, URISyntaxException
+	public static void main(final String[] args) throws ParserConfigurationException,
+		SAXException, IOException, URISyntaxException, TelegramApiException
 	{
 		LOG.info("HertlHendlBot starting");
-		ApiContextInitializer.init();
+
 		// final DBContext db = MapDBContext.onlineInstance("bot.db");
 		final String token = args[0] != null ? args[0] : BOT_TOKEN;
 		final String username = args[1] != null ? args[1] : BOT_USERNAME;
 		final HertlHendlBot bot = new HertlHendlBot(token, username);
-		final TelegramBotsApi api = new TelegramBotsApi();
+		 TelegramBotsApi api = new TelegramBotsApi(DefaultBotSession.class);
 		api.registerBot(bot);
 		LOG.info("HertlHendlBot successfull started");
 	}
@@ -137,7 +138,7 @@ public class HertlHendlBot extends AbilityBot
 	
 	private String getFilePath(final PhotoSize photo)
 	{
-		if(photo.hasFilePath())
+		if(photo.getFilePath() != null)
 		{
 			return photo.getFilePath();
 		}
@@ -167,44 +168,14 @@ public class HertlHendlBot extends AbilityBot
 		}
 		return null;
 	}
-	
-	private void sendPhotoFromUrl(final String url, final Long chatId)
+
+	private void sendPhotoFromUpload(final String filePath, final  Long chatId)
 	{
 		final SendPhoto sendPhotoRequest = new SendPhoto(); // 1
-		sendPhotoRequest.setChatId(chatId); // 2
-		sendPhotoRequest.setPhoto(url); // 3
+		sendPhotoRequest.setChatId(Long.toString(chatId)); // 2
 		try
 		{
-			this.execute(sendPhotoRequest); // 4
-		}
-		catch(final TelegramApiException e)
-		{
-			e.printStackTrace();
-		}
-	}
-	
-	private void sendPhotoFromFileId(final String fileId, final Long chatId)
-	{
-		final SendPhoto sendPhotoRequest = new SendPhoto(); // 1
-		sendPhotoRequest.setChatId(chatId); // 2
-		sendPhotoRequest.setPhoto(fileId); // 3
-		try
-		{
-			this.execute(sendPhotoRequest); // 4
-		}
-		catch(final TelegramApiException e)
-		{
-			e.printStackTrace();
-		}
-	}
-	
-	private void sendPhotoFromUpload(final String filePath, final Long chatId)
-	{
-		final SendPhoto sendPhotoRequest = new SendPhoto(); // 1
-		sendPhotoRequest.setChatId(chatId); // 2
-		try
-		{
-			sendPhotoRequest.setPhoto(filePath, IOHelper.findResource(filePath));
+			sendPhotoRequest.setPhoto(new InputFile(IOHelper.findResource(filePath), filePath));
 		}
 		catch(final FileNotFoundException e1)
 		{
@@ -233,7 +204,7 @@ public class HertlHendlBot extends AbilityBot
 		return Ability.builder().name("help").info("shows help").locality(ALL).privacy(PUBLIC).action(context ->
 		{
 			final SendMessage message = new SendMessage();
-			message.setChatId(context.chatId());
+			message.setChatId(Long.toString(context.chatId()));
 			message.setText(this.createAbilityListForHelp());
 			this.silent.execute(message);
 		}).build();
@@ -254,7 +225,7 @@ public class HertlHendlBot extends AbilityBot
 					final Long chatId = context.chatId();
 					final HertlBotBestellung bestellung = hertlBotDao.loadBestellung(chatId, bestellId);
 					final SendMessage message = new SendMessage();
-					message.setChatId(chatId);
+					message.setChatId(Long.toString(context.chatId()));
 					final String messageText = bestellung.toString() + System.lineSeparator() + "Füge Positionen zu deiner Bestellung hinzu";
 					
 					message.setText(messageText);
@@ -281,7 +252,7 @@ public class HertlHendlBot extends AbilityBot
 				.privacy(PUBLIC)
 				.action(context -> {
 					final SendMessage message = new SendMessage();
-					message.setChatId(context.chatId());
+					message.setChatId(Long.toString(context.chatId()));
 					message.setText(this.loadAndShowAllArtikel());
 					this.silent.execute(message);
 				}).build();
@@ -295,7 +266,7 @@ public class HertlHendlBot extends AbilityBot
 			ALL).privacy(PUBLIC).action(context ->
 			{
 				final SendMessage message = new SendMessage();
-				message.setChatId(context.chatId());
+				message.setChatId(Long.toString(context.chatId()));
 				message.setText(this.loadAndShowMyBestellungen(context.chatId()));
 				
 				this.silent.execute(message);
@@ -310,7 +281,7 @@ public class HertlHendlBot extends AbilityBot
 			"Zeigt die eigenen Bestellungen als keyboard").locality(ALL).privacy(PUBLIC).action(context ->
 			{
 				final SendMessage message = new SendMessage();
-				message.setChatId(context.chatId());
+				message.setChatId(Long.toString(context.chatId()));
 				message.setText("Öffne die Bestellungen über die Tastatur: ");
 				
 				final ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
@@ -332,7 +303,7 @@ public class HertlHendlBot extends AbilityBot
 			ALL).privacy(PUBLIC).action(context ->
 			{
 				final SendMessage message = new SendMessage();
-				message.setChatId(context.chatId());
+				message.setChatId(Long.toString(context.chatId()));
 				message.setText(this.createAndShowNewBestellung(context.chatId()));
 				this.silent.execute(message);
 			}).build();
@@ -351,7 +322,7 @@ public class HertlHendlBot extends AbilityBot
 				.action(context ->
 			{
 				final SendMessage message = new SendMessage();
-				message.setChatId(context.chatId());
+				message.setChatId(Long.toString(context.chatId()));
 				message.setText(this.createPositionForBestellung(context.firstArg(), context.chatId(), Integer.valueOf(context.secondArg())));
 				this.silent.execute(message);
 			}).build();
@@ -364,7 +335,7 @@ public class HertlHendlBot extends AbilityBot
 			context ->
 			{
 				final SendMessage message = new SendMessage();
-				message.setChatId(context.chatId());
+				message.setChatId(Long.toString(context.chatId()));
 				message.setText("Enjoy this wonderful keyboard!");
 				
 				final ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
@@ -392,7 +363,7 @@ public class HertlHendlBot extends AbilityBot
 			context ->
 			{
 				final SendMessage message = new SendMessage();
-				message.setChatId(context.chatId());
+				message.setChatId(Long.toString(context.chatId()));
 				message.setText(PRICE_AS_TEXT);
 				this.silent.execute(message);
 			}).build();
