@@ -68,14 +68,14 @@ public class HertlBotRootDao {
 	public HertlBotBestellung createNewBestellungForUser(Long chatId) {
 		HertlBotUser user = this.loadUser(chatId);
 		HertlBotBestellung bestellung = new HertlBotBestellung(user, new ArrayList<>());
-		user.addBestellung(bestellung, this.storageManager);
+		user.addBestellung(bestellung, storageManager);
 
 		return bestellung;
 	}
 
 	public void shutDown() {
 
-		this.storageManager.shutdown();
+		storageManager.shutdown();
 	}
 
 }

@@ -53,7 +53,6 @@ import org.telegram.telegrambots.meta.api.objects.PhotoSize;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import org.xml.sax.SAXException;
 
@@ -96,10 +95,6 @@ public class HertlHendlBot extends AbilityBot
 		ABILTY_NAME_OFFENE_BESTELLUNG);
 	private static final String KEY_PRE_SYMBOL = "/";
 	
-	private static final String PRICE_AS_TEXT = "1/2 Hähnchen 3,80€\n"
-		+ "Schenkel     2,00€\n"
-		+ "Brezel       0,80€\n"
-		+ "Salat        1,50€\n";
 	private static final String HENDL_PREISE_JPG = "hendl_preise.jpg";
 	private final static Logger LOG = LoggerFactory.getLogger(HertlHendlBot.class);
 	private final static String BOT_TOKEN = "";
@@ -135,39 +130,7 @@ public class HertlHendlBot extends AbilityBot
 	{
 		return CREATOR_ID;
 	}
-	
-	private String getFilePath(final PhotoSize photo)
-	{
-		if(photo.getFilePath() != null)
-		{
-			return photo.getFilePath();
-		}
-		final GetFile getFileMethod = new GetFile();
-		getFileMethod.setFileId(photo.getFileId());
-		try
-		{
-			final org.telegram.telegrambots.meta.api.objects.File file = this.execute(getFileMethod);
-			return file.getFilePath();
-		}
-		catch(final TelegramApiException e)
-		{
-			e.printStackTrace();
-		}
-		return null;
-	}
-	
-	private File downloadPhoto(final String filePath)
-	{
-		try
-		{
-			return this.downloadFile(filePath);
-		}
-		catch(final TelegramApiException e)
-		{
-			e.printStackTrace();
-		}
-		return null;
-	}
+
 
 	private void sendPhotoFromUpload(final String filePath, final  Long chatId)
 	{
@@ -355,19 +318,7 @@ public class HertlHendlBot extends AbilityBot
 				this.silent.execute(message);
 			}).build();
 	}
-	
-	@SuppressWarnings({"unused", "WeakerAccess"})
-	public Ability showPreise()
-	{
-		return Ability.builder().name(ABILTY_NAME_PREISE).info("Preisliste").locality(ALL).privacy(PUBLIC).action(
-			context ->
-			{
-				final SendMessage message = new SendMessage();
-				message.setChatId(Long.toString(context.chatId()));
-				message.setText(PRICE_AS_TEXT);
-				this.silent.execute(message);
-			}).build();
-	}
+
 	
 	@SuppressWarnings({"unused", "WeakerAccess"})
 	public Ability showPreiseFoto()
@@ -511,17 +462,7 @@ public class HertlHendlBot extends AbilityBot
 		return this.loadAndShowBestellung(chatId, bestellungId);
 		
 	}
-	
-	private String formatStandorte(final List<String> standorte)
-	{
-		String alle = "";
-		for(final String standort : standorte)
-		{
-			alle += standort;
-		}
-		
-		return alle;
-	}
+
 	
 	private String loadAndShowBestellung(final Long chatId, final int bestellId)
 	{
