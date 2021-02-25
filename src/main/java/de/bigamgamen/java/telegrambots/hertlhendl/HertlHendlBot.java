@@ -45,12 +45,13 @@ import org.telegram.abilitybots.api.objects.Ability;
 import org.telegram.abilitybots.api.sender.MessageSender;
 import org.telegram.abilitybots.api.sender.SilentSender;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
-import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
-import org.telegram.telegrambots.meta.api.objects.PhotoSize;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
@@ -72,9 +73,7 @@ public class HertlHendlBot extends AbilityBot
 	private static final String ABILTY_NAME_KEYBOARD = "keyboard";
 	private static final String ABILTY_NAME_STANDORTEFOTO = "standortefoto";
 	private static final String ABILTY_NAME_PREISEFOTO = "preisefoto";
-	private static final String ABILTY_NAME_PREISE = "preise";
 	private static final String ABILTY_NAME_BESTELLUNG = "bestellung";
-	private static final String ABILTY_NAME_BESTELLUNGEN = "bestellungen";
 	private static final String ABILTY_NAME_ARTIKEL = "artikel";
 	private static final String ABILTY_NAME_ADD_POSITION = "addposition";
 	private static final String ABILTY_NAME_MY_BESTELLUNGEN = "mybestellungen";
@@ -85,9 +84,7 @@ public class HertlHendlBot extends AbilityBot
 		ABILTY_NAME_KEYBOARD,
 		ABILTY_NAME_STANDORTEFOTO,
 		ABILTY_NAME_PREISEFOTO,
-		ABILTY_NAME_PREISE,
 		ABILTY_NAME_ARTIKEL,
-		ABILTY_NAME_BESTELLUNGEN,
 		ABILTY_NAME_MY_BESTELLUNGEN_KEYBOARD,
 		ABILTY_NAME_BESTELLUNG,
 		ABILTY_NAME_MY_BESTELLUNGEN,
@@ -159,8 +156,7 @@ public class HertlHendlBot extends AbilityBot
 			e.printStackTrace();
 		}
 	}
-	
-	@SuppressWarnings({"unused", "WeakerAccess"})
+
 	public Ability showHelp()
 	{
 		
@@ -173,7 +169,7 @@ public class HertlHendlBot extends AbilityBot
 		}).build();
 	}
 
-	@SuppressWarnings({ "unused", "WeakerAccess" })
+
 	public Ability showBestellung() {
 
 		return Ability
@@ -204,7 +200,7 @@ public class HertlHendlBot extends AbilityBot
 				}).build();
 	}
 	
-	@SuppressWarnings({ "unused", "WeakerAccess" })
+
 	public Ability showArtikel() {
 
 		return Ability
@@ -221,22 +217,22 @@ public class HertlHendlBot extends AbilityBot
 				}).build();
 	}
 	
-	@SuppressWarnings({"unused", "WeakerAccess"})
-	public Ability showMyBestellungen()
-	{
-		
-		return Ability.builder().name(ABILTY_NAME_MY_BESTELLUNGEN).info("Zeigt die eigenen Bestellungen").locality(
-			ALL).privacy(PUBLIC).action(context ->
-			{
-				final SendMessage message = new SendMessage();
-				message.setChatId(Long.toString(context.chatId()));
-				message.setText(this.loadAndShowMyBestellungen(context.chatId()));
-				
-				this.silent.execute(message);
-			}).build();
-	}
+
+//	public Ability showMyBestellungen()
+//	{
+//		
+//		return Ability.builder().name(ABILTY_NAME_MY_BESTELLUNGEN).info("Zeigt die eigenen Bestellungen").locality(
+//			ALL).privacy(PUBLIC).action(context ->
+//			{
+//				final SendMessage message = new SendMessage();
+//				message.setChatId(Long.toString(context.chatId()));
+//				message.setText(this.loadAndShowMyBestellungen(context.chatId()));
+//				
+//				this.silent.execute(message);
+//			}).build();
+//	}
 	
-	@SuppressWarnings({"unused", "WeakerAccess"})
+
 	public Ability showMyBestellungenKeyBoard()
 	{
 		
@@ -258,7 +254,6 @@ public class HertlHendlBot extends AbilityBot
 			}).build();
 	}
 	
-	@SuppressWarnings({"unused", "WeakerAccess"})
 	public Ability createNewBestellung()
 	{
 		
@@ -272,7 +267,6 @@ public class HertlHendlBot extends AbilityBot
 			}).build();
 	}
 	
-	@SuppressWarnings({"unused", "WeakerAccess"})
 	public Ability addPositionToBestellung()
 	{
 		
@@ -291,7 +285,6 @@ public class HertlHendlBot extends AbilityBot
 			}).build();
 	}
 	
-	@SuppressWarnings({"unused", "WeakerAccess"})
 	public Ability sendKeyboard()
 	{
 		return Ability.builder().name("keyboard").info("send a custom keyboard").locality(ALL).privacy(PUBLIC).action(
@@ -304,42 +297,45 @@ public class HertlHendlBot extends AbilityBot
 				final ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
 				final List<KeyboardRow> keyboard = new ArrayList<>();
 				
+				
 				// row 1
 				final KeyboardRow row = new KeyboardRow();
-				row.add(this.createKeyForAbility(ABILTY_NAME_PREISE));
 				row.add(this.createKeyForAbility(ABILTY_NAME_PREISEFOTO));
 				row.add(this.createKeyForAbility(ABILTY_NAME_STANDORTEFOTO));
 				keyboard.add(row);
 				
+				
+				
+				
 				// activate the keyboard
 				keyboardMarkup.setKeyboard(keyboard);
 				message.setReplyMarkup(keyboardMarkup);
+				
+				
+
 				
 				this.silent.execute(message);
 			}).build();
 	}
 
 	
-	@SuppressWarnings({"unused", "WeakerAccess"})
 	public Ability showPreiseFoto()
 	{
 		return Ability.builder().name(ABILTY_NAME_PREISEFOTO).info("send Preisfoto").locality(ALL).privacy(
 			PUBLIC).action(context -> this.sendPhotoFromUpload(HENDL_PREISE_JPG, context.chatId())).build();
 	}
 	
-	@SuppressWarnings({"unused", "WeakerAccess"})
 	public Ability showstandorteFoto()
 	{
 		return Ability.builder().name(ABILTY_NAME_STANDORTEFOTO).info("standorteFoto Weiden").locality(ALL).privacy(
 			PUBLIC).action(context -> this.makeScreenshotSenditDeleteit(context.chatId())).build();
 	}
 	
-	@SuppressWarnings({"unused", "WeakerAccess"})
-	public Ability showstandorteWeiden()
-	{
-		return Ability.builder().name("standorte").info("standorte Weiden").locality(ALL).privacy(PUBLIC).action(
-			context -> this.sendPhotoFromUpload("", context.chatId())).build();
-	}
+//	public Ability showstandorteWeiden()
+//	{
+//		return Ability.builder().name("standorte").info("standorte Weiden").locality(ALL).privacy(PUBLIC).action(
+//			context -> this.sendPhotoFromUpload("", context.chatId())).build();
+//	}
 	
 	private void makeScreenshotSenditDeleteit(final Long chatId)
 	{
