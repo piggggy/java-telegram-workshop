@@ -48,10 +48,7 @@ import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
@@ -60,6 +57,7 @@ import org.xml.sax.SAXException;
 import com.google.common.annotations.VisibleForTesting;
 
 import de.bigamgamen.java.helper.IOHelper;
+import de.bigamgamen.java.telegrambots.hertlhendl.builder.TelegramKeyBoardBuilder;
 import de.bigamgamen.java.telegrambots.hertlhendl.dal.HertlBotRootDao;
 import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotArtikel;
 import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotBestellung;
@@ -70,16 +68,16 @@ import de.bigamgamen.java.telegrambots.hertlhendl.init.InitArtikels;
 public class HertlHendlBot extends AbilityBot
 {
 	
-	private static final String ABILTY_NAME_KEYBOARD = "keyboard";
-	private static final String ABILTY_NAME_STANDORTEFOTO = "standortefoto";
-	private static final String ABILTY_NAME_PREISEFOTO = "preisefoto";
-	private static final String ABILTY_NAME_BESTELLUNG = "bestellung";
-	private static final String ABILTY_NAME_ARTIKEL = "artikel";
-	private static final String ABILTY_NAME_ADD_POSITION = "addposition";
-	private static final String ABILTY_NAME_MY_BESTELLUNGEN = "mybestellungen";
-	private static final String ABILTY_NAME_MY_BESTELLUNGEN_KEYBOARD = "mybestellungenkeyboard";
-	private static final String ABILTY_NAME_NEUE_BESTELLUNG = "neuebestellung";
-	private static final String ABILTY_NAME_OFFENE_BESTELLUNG = "offnenebestellungen";
+	public static final String ABILTY_NAME_KEYBOARD = "keyboard";
+	public static final String ABILTY_NAME_STANDORTEFOTO = "standortefoto";
+	public static final String ABILTY_NAME_PREISEFOTO = "preisefoto";
+	public static final String ABILTY_NAME_BESTELLUNG = "bestellung";
+	public static final String ABILTY_NAME_ARTIKEL = "artikel";
+	public static final String ABILTY_NAME_ADD_POSITION = "addposition";
+	public static final String ABILTY_NAME_MY_BESTELLUNGEN = "mybestellungen";
+	public static final String ABILTY_NAME_MY_BESTELLUNGEN_KEYBOARD = "mybestellungenkeyboard";
+	public static final String ABILTY_NAME_NEUE_BESTELLUNG = "neuebestellung";
+	public static final String ABILTY_NAME_OFFENE_BESTELLUNG = "offnenebestellungen";
 	private static final List<String> abilities = Arrays.asList(
 		ABILTY_NAME_KEYBOARD,
 		ABILTY_NAME_STANDORTEFOTO,
@@ -90,7 +88,7 @@ public class HertlHendlBot extends AbilityBot
 		ABILTY_NAME_MY_BESTELLUNGEN,
 		ABILTY_NAME_NEUE_BESTELLUNG,
 		ABILTY_NAME_OFFENE_BESTELLUNG);
-	private static final String KEY_PRE_SYMBOL = "/";
+
 	
 	private static final String HENDL_PREISE_JPG = "hendl_preise.jpg";
 	private final static Logger LOG = LoggerFactory.getLogger(HertlHendlBot.class);
@@ -99,6 +97,8 @@ public class HertlHendlBot extends AbilityBot
 	private static int CREATOR_ID = 929115416;
 	private static String HERTL_URL = "https://hertel-haehnchen.de/standplatzsuche?search=92637";
 	private static HertlBotRootDao hertlBotDao;
+	
+	private final TelegramKeyBoardBuilder keyBoardBuilder;
 	
 	public static void main(final String[] args) throws ParserConfigurationException,
 		SAXException, IOException, URISyntaxException, TelegramApiException
@@ -120,6 +120,7 @@ public class HertlHendlBot extends AbilityBot
 		super(botToken, botUsername);
 		hertlBotDao = new HertlBotRootDao();
 		InitArtikels.initArtikels(hertlBotDao);
+		this.keyBoardBuilder = new TelegramKeyBoardBuilder(hertlBotDao);
 	}
 	
 	@Override
@@ -164,7 +165,7 @@ public class HertlHendlBot extends AbilityBot
 		{
 			final SendMessage message = new SendMessage();
 			message.setChatId(Long.toString(context.chatId()));
-			message.setText(this.createAbilityListForHelp());
+			message.setText(keyBoardBuilder.createAbilityListForHelp(abilities));
 			this.silent.execute(message);
 		}).build();
 	}
@@ -244,7 +245,7 @@ public class HertlHendlBot extends AbilityBot
 				message.setText("Öffne die Bestellungen über die Tastatur: ");
 				
 				final ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
-				final List<KeyboardRow> keyboard = this.loadAndShowMyBestellungenAsKeyBoard(context.chatId());
+				final List<KeyboardRow> keyboard = keyBoardBuilder.loadAndShowMyBestellungenAsKeyBoard(context.chatId());
 				
 				// activate the keyboard
 				keyboardMarkup.setKeyboard(keyboard);
@@ -262,7 +263,7 @@ public class HertlHendlBot extends AbilityBot
 			{
 				final SendMessage message = new SendMessage();
 				message.setChatId(Long.toString(context.chatId()));
-				message.setText(this.createAndShowNewBestellung(context.chatId()));
+				message.setText(keyBoardBuilder.createAndShowNewBestellung(context.chatId()));
 				this.silent.execute(message);
 			}).build();
 	}
@@ -300,8 +301,8 @@ public class HertlHendlBot extends AbilityBot
 				
 				// row 1
 				final KeyboardRow row = new KeyboardRow();
-				row.add(this.createKeyForAbility(ABILTY_NAME_PREISEFOTO));
-				row.add(this.createKeyForAbility(ABILTY_NAME_STANDORTEFOTO));
+				row.add(keyBoardBuilder.createKeyForAbility(ABILTY_NAME_PREISEFOTO));
+				row.add(keyBoardBuilder.createKeyForAbility(ABILTY_NAME_STANDORTEFOTO));
 				keyboard.add(row);
 				
 				
@@ -446,7 +447,7 @@ public class HertlHendlBot extends AbilityBot
 			position = positionOpt.get();
 			position.getMenge().add(
 				BigInteger.valueOf(1L));
-			hertlBotDao.storageManager().store(position);
+			HertlBotRootDao.storageManager().store(position);
 		}
 		else
 		{
@@ -471,50 +472,10 @@ public class HertlHendlBot extends AbilityBot
 		
 		final StringBuilder sb = new StringBuilder("Ihre Bestellungen:" + System.lineSeparator());
 		HertlHendlBot.hertlBotDao.loadUser(chatId).getBestellungen().forEach(
-			bestellung -> sb.append(this.createBestellungLink(bestellung)));
+			bestellung -> sb.append(keyBoardBuilder.createBestellungLink(bestellung)));
 		return sb.toString();
 	}
 	
-	public List<KeyboardRow> loadAndShowMyBestellungenAsKeyBoard(final Long chatId)
-	{
-		final List<KeyboardRow> keyboard = new ArrayList<>();
-		final KeyboardRow row = new KeyboardRow();
-		
-		HertlHendlBot.hertlBotDao.loadUser(chatId).getBestellungen().forEach(
-			bestellung -> row.add(this.createBestellungLink(bestellung)));
-		
-		keyboard.add(row);
-		
-		return keyboard;
-	}
-	
-	public String createAndShowNewBestellung(final Long chatId)
-	{
-		
-		final HertlBotBestellung bestellung = hertlBotDao.createNewBestellungForUser(chatId);
-		
-		return this.createBestellungLink(bestellung);
-	}
-	
-	private String createAbilityListForHelp()
-	{
-		final StringBuilder sb = new StringBuilder();
-		abilities.forEach(ability -> sb.append(this.createKeyForAbility(ability) + System.lineSeparator()));
-		return sb.toString();
-	}
-	
-	private String createKeyForAbility(final String ability)
-	{
-		return KEY_PRE_SYMBOL + ability;
-	}
-	
-	private String createBestellungLink(final HertlBotBestellung bestellung)
-	{
-		return this.createKeyForAbility(ABILTY_NAME_BESTELLUNG)
-			+ " "
-			+ Integer.toString(bestellung.getIndex())
-			+ System.lineSeparator();
-	}
 	
 	private String loadAndShowAllArtikel()
 	{
@@ -529,21 +490,13 @@ public class HertlHendlBot extends AbilityBot
 		final List<KeyboardRow> keyboard = new ArrayList<>();
 		final KeyboardRow row = new KeyboardRow();
 		
-				hertlBotDao.root().artikels().all().forEach(artikel  -> row.add(this.createAddPositiontoBestellungLink(artikel, bestellungId)) );
+				hertlBotDao.root().artikels().all().forEach(artikel  -> row.add(keyBoardBuilder.createAddPositiontoBestellungLink(artikel, bestellungId)) );
 		
 		keyboard.add(row);
 		
 		return keyboard;
 	}
 	
-	private String createAddPositiontoBestellungLink(final HertlBotArtikel artikel, final Integer bestellungId)
-	{
-		return this.createKeyForAbility(ABILTY_NAME_ADD_POSITION)
-			+ " "
-			+ artikel.getName()
-			+ " "
-			+ bestellungId
-			+ System.lineSeparator();
-	}
+	
 	
 }
