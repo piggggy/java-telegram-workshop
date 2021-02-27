@@ -8,13 +8,13 @@ import one.microstream.persistence.types.Persister;
 public class HertlBotUser {
 
 	private Long chatId;
-	private List<HertlBotBestellung> bestellungen = new ArrayList<>();
+	private List<HertlBotOrder> bestellungen = new ArrayList<>();
 
 	public HertlBotUser() {
 		
 	}
 	
-	public synchronized void addBestellung(HertlBotBestellung bestellung, final Persister persister)
+	public synchronized void addBestellung(HertlBotOrder bestellung, final Persister persister)
 	{
 		bestellung.setUser(this);
 		this.bestellungen.add(bestellung);
@@ -31,7 +31,7 @@ public class HertlBotUser {
 		this.chatId = chatId;
 	}
 
-	public List<HertlBotBestellung> getBestellungen() {
+	public List<HertlBotOrder> getBestellungen() {
 		return new ArrayList<>(bestellungen);
 	}
 	

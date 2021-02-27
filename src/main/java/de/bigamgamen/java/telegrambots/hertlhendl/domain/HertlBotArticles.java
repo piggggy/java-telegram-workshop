@@ -11,18 +11,18 @@ import java.util.stream.Collectors;
 import de.bigamgamen.java.telegrambots.hertlhendl.dal.HertlBotRootDao;
 import one.microstream.persistence.types.Persister;
 
-public class HertlBotArtikels {
+public class HertlBotArticles {
 
-	private final Map<String, HertlBotArtikel> artikels = new HashMap<>();
+	private final Map<String, HertlBotArticle> artikels = new HashMap<>();
 
-	public HertlBotArtikels() {
+	public HertlBotArticles() {
 		super();
 	}
 	
 	
 	
 	public void add(
-		final HertlBotArtikel artikel,
+		final HertlBotArticle artikel,
 		final Persister persister
 	)
 	{
@@ -30,19 +30,19 @@ public class HertlBotArtikels {
 		persister.store(this.artikels);
 	}
 
-	public void addAll(final Collection<? extends HertlBotArtikel> HertlBotArtikels)
+	public void addAll(final Collection<? extends HertlBotArticle> HertlBotArtikels)
 	{
 		this.addAll(HertlBotArtikels, HertlBotRootDao.storageManager());
 	}
 	
 	public void addAll(
-		final Collection<? extends HertlBotArtikel> artikels,
+		final Collection<? extends HertlBotArticle> artikels,
 		final Persister persister
 	)
 	{
 		this.artikels.putAll(
 				artikels.stream().collect(
-				Collectors.toMap(HertlBotArtikel::getName, Function.identity())
+				Collectors.toMap(HertlBotArticle::getName, Function.identity())
 			)
 		);
 		persister.store(this.artikels);
@@ -53,12 +53,12 @@ public class HertlBotArtikels {
 		return this.artikels.size();
 	}
 
-	public List<HertlBotArtikel> all()
+	public List<HertlBotArticle> all()
 	{
 		return new ArrayList<>(this.artikels.values());
 	}
 
-	public HertlBotArtikel ofName(final String artikelName)
+	public HertlBotArticle ofName(final String artikelName)
 	{
 		return this.artikels.get(artikelName);
 	}

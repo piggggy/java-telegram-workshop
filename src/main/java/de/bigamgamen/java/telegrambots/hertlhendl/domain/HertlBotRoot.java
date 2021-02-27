@@ -2,7 +2,7 @@ package de.bigamgamen.java.telegrambots.hertlhendl.domain;
 
 public class HertlBotRoot {
 	private HertlBotUsers users = new HertlBotUsers();
-	private HertlBotArtikels artikels = new HertlBotArtikels();
+	private HertlBotArticles artikels = new HertlBotArticles();
 	
 	public HertlBotRoot()
 	{
@@ -13,7 +13,7 @@ public class HertlBotRoot {
 		return users;
 	}
 
-	public HertlBotArtikels artikels() {
+	public HertlBotArticles artikels() {
 		return artikels;
 	}
 

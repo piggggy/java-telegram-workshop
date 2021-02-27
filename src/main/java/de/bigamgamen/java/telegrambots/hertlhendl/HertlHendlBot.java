@@ -42,6 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.telegram.abilitybots.api.bot.AbilityBot;
 import org.telegram.abilitybots.api.objects.Ability;
+import org.telegram.abilitybots.api.objects.MessageContext;
 import org.telegram.abilitybots.api.sender.MessageSender;
 import org.telegram.abilitybots.api.sender.SilentSender;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
@@ -59,37 +60,28 @@ import com.google.common.annotations.VisibleForTesting;
 import de.bigamgamen.java.helper.IOHelper;
 import de.bigamgamen.java.telegrambots.hertlhendl.builder.TelegramKeyBoardBuilder;
 import de.bigamgamen.java.telegrambots.hertlhendl.dal.HertlBotRootDao;
-import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotArtikel;
-import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotBestellung;
+import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotArticle;
+import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotOrder;
 import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotPosition;
-import de.bigamgamen.java.telegrambots.hertlhendl.init.InitArtikels;
+import de.bigamgamen.java.telegrambots.hertlhendl.init.InitArticles;
 
+public class HertlHendlBot extends AbilityBot {
 
-public class HertlHendlBot extends AbilityBot
-{
-	
-	public static final String ABILTY_NAME_KEYBOARD = "keyboard";
-	public static final String ABILTY_NAME_STANDORTEFOTO = "standortefoto";
-	public static final String ABILTY_NAME_PREISEFOTO = "preisefoto";
-	public static final String ABILTY_NAME_BESTELLUNG = "bestellung";
-	public static final String ABILTY_NAME_ARTIKEL = "artikel";
+//	public static final String ABILTY_NAME_KEYBOARD = "keyboard";
+	public static final String ABILTY_NAME_LOCATION_PHOTO = "standortefoto";
+	public static final String ABILTY_NAME_PRICES_PHOTO = "preisefoto";
+	public static final String ABILTY_NAME_ORDER = "bestellung";
+	public static final String ABILTY_NAME_ITEM = "artikel";
 	public static final String ABILTY_NAME_ADD_POSITION = "addposition";
-	public static final String ABILTY_NAME_MY_BESTELLUNGEN = "mybestellungen";
-	public static final String ABILTY_NAME_MY_BESTELLUNGEN_KEYBOARD = "mybestellungenkeyboard";
-	public static final String ABILTY_NAME_NEUE_BESTELLUNG = "neuebestellung";
-	public static final String ABILTY_NAME_OFFENE_BESTELLUNG = "offnenebestellungen";
+	public static final String ABILTY_NAME_LIST_MY_ORDERS = "bestellungenauflistung";
+	public static final String ABILTY_NAME_MY_ORDERS_AS_KEYBOARD = "bestellungenkeyboard";
+	public static final String ABILTY_NAME_NEW_ORDER = "neuebestellung";
+	public static final String ABILTY_NAME_OPEN_ORDERS = "offnenebestellungen";
 	private static final List<String> abilities = Arrays.asList(
-		ABILTY_NAME_KEYBOARD,
-		ABILTY_NAME_STANDORTEFOTO,
-		ABILTY_NAME_PREISEFOTO,
-		ABILTY_NAME_ARTIKEL,
-		ABILTY_NAME_MY_BESTELLUNGEN_KEYBOARD,
-		ABILTY_NAME_BESTELLUNG,
-		ABILTY_NAME_MY_BESTELLUNGEN,
-		ABILTY_NAME_NEUE_BESTELLUNG,
-		ABILTY_NAME_OFFENE_BESTELLUNG);
+//		ABILTY_NAME_KEYBOARD,
+			ABILTY_NAME_LOCATION_PHOTO, ABILTY_NAME_PRICES_PHOTO, ABILTY_NAME_ITEM, ABILTY_NAME_LIST_MY_ORDERS,
+			ABILTY_NAME_MY_ORDERS_AS_KEYBOARD, ABILTY_NAME_NEW_ORDER, ABILTY_NAME_OPEN_ORDERS);
 
-	
 	private static final String HENDL_PREISE_JPG = "hendl_preise.jpg";
 	private final static Logger LOG = LoggerFactory.getLogger(HertlHendlBot.class);
 	private final static String BOT_TOKEN = "";
@@ -97,72 +89,57 @@ public class HertlHendlBot extends AbilityBot
 	private static int CREATOR_ID = 929115416;
 	private static String HERTL_URL = "https://hertel-haehnchen.de/standplatzsuche?search=92637";
 	private static HertlBotRootDao hertlBotDao;
-	
+
 	private final TelegramKeyBoardBuilder keyBoardBuilder;
-	
-	public static void main(final String[] args) throws ParserConfigurationException,
-		SAXException, IOException, URISyntaxException, TelegramApiException
-	{
+
+	public static void main(final String[] args)
+			throws ParserConfigurationException, SAXException, IOException, URISyntaxException, TelegramApiException {
 		LOG.info("HertlHendlBot starting");
 
 		// final DBContext db = MapDBContext.onlineInstance("bot.db");
 		final String token = args[0] != null ? args[0] : BOT_TOKEN;
 		final String username = args[1] != null ? args[1] : BOT_USERNAME;
 		final HertlHendlBot bot = new HertlHendlBot(token, username);
-		 TelegramBotsApi api = new TelegramBotsApi(DefaultBotSession.class);
+		TelegramBotsApi api = new TelegramBotsApi(DefaultBotSession.class);
 		api.registerBot(bot);
 		LOG.info("HertlHendlBot successfull started");
 	}
-	
+
 	public HertlHendlBot(final String botToken, final String botUsername)
-		throws ParserConfigurationException, SAXException, IOException, URISyntaxException
-	{
+			throws ParserConfigurationException, SAXException, IOException, URISyntaxException {
 		super(botToken, botUsername);
 		hertlBotDao = new HertlBotRootDao();
-		InitArtikels.initArtikels(hertlBotDao);
+		InitArticles.initArtikels(hertlBotDao);
 		this.keyBoardBuilder = new TelegramKeyBoardBuilder(hertlBotDao);
 	}
-	
+
 	@Override
-	public int creatorId()
-	{
+	public int creatorId() {
 		return CREATOR_ID;
 	}
 
-
-	private void sendPhotoFromUpload(final String filePath, final  Long chatId)
-	{
+	private void sendPhotoFromUpload(final String filePath, final Long chatId) {
 		final SendPhoto sendPhotoRequest = new SendPhoto(); // 1
 		sendPhotoRequest.setChatId(Long.toString(chatId)); // 2
-		try
-		{
+		try {
 			sendPhotoRequest.setPhoto(new InputFile(IOHelper.findResource(filePath), filePath));
-		}
-		catch(final FileNotFoundException e1)
-		{
+		} catch (final FileNotFoundException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
-		}
-		catch(final IOException e1)
-		{
+		} catch (final IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		} // 3
-		try
-		{
+		try {
 			this.execute(sendPhotoRequest); // 4
-		}
-		catch(final TelegramApiException e)
-		{
+		} catch (final TelegramApiException e) {
 			e.printStackTrace();
 		}
 	}
 
-	public Ability showHelp()
-	{
-		
-		return Ability.builder().name("help").info("shows help").locality(ALL).privacy(PUBLIC).action(context ->
-		{
+	public Ability showHelp() {
+
+		return Ability.builder().name("help").info("shows help").locality(ALL).privacy(PUBLIC).action(context -> {
 			final SendMessage message = new SendMessage();
 			message.setChatId(Long.toString(context.chatId()));
 			message.setText(keyBoardBuilder.createAbilityListForHelp(abilities));
@@ -170,46 +147,35 @@ public class HertlHendlBot extends AbilityBot
 		}).build();
 	}
 
-
 	public Ability showBestellung() {
 
-		return Ability
-				.builder()
-				.name(ABILTY_NAME_BESTELLUNG)
-				.info("zeigt eine bestimmte Bestellung")
-				.locality(ALL)
-				.privacy(PUBLIC)
-				.input(1)
-				.action(context -> {
+		return Ability.builder().name(ABILTY_NAME_ORDER).info("zeigt eine bestimmte Bestellung").locality(ALL)
+				.privacy(PUBLIC).input(1).action(context -> {
 					final int bestellId = Integer.parseInt(context.firstArg());
 					final Long chatId = context.chatId();
-					final HertlBotBestellung bestellung = hertlBotDao.loadBestellung(chatId, bestellId);
+					final HertlBotOrder bestellung = hertlBotDao.loadBestellung(chatId, bestellId);
 					final SendMessage message = new SendMessage();
 					message.setChatId(Long.toString(context.chatId()));
-					final String messageText = bestellung.toString() + System.lineSeparator() + "Füge Positionen zu deiner Bestellung hinzu";
-					
+					final String messageText = bestellung.toString() + System.lineSeparator()
+							+ "Füge Positionen zu deiner Bestellung hinzu";
+
 					message.setText(messageText);
-					
+
 					final ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
-					final List<KeyboardRow> keyboard = keyBoardBuilder.loadAndShowAllArtikelForBestellung(context.chatId(), bestellId);
+					final List<KeyboardRow> keyboard = keyBoardBuilder
+							.loadAndShowAllArtikelForBestellung(context.chatId(), bestellId);
 
 					// activate the keyboard
 					keyboardMarkup.setKeyboard(keyboard);
 					message.setReplyMarkup(keyboardMarkup);
-					
+
 					this.silent.execute(message);
 				}).build();
 	}
-	
 
 	public Ability showArtikel() {
 
-		return Ability
-				.builder()
-				.name(ABILTY_NAME_ARTIKEL)
-				.info("Listet alle Artikel auf")
-				.locality(ALL)
-				.privacy(PUBLIC)
+		return Ability.builder().name(ABILTY_NAME_ITEM).info("Listet alle Artikel auf").locality(ALL).privacy(PUBLIC)
 				.action(context -> {
 					final SendMessage message = new SendMessage();
 					message.setChatId(Long.toString(context.chatId()));
@@ -217,276 +183,209 @@ public class HertlHendlBot extends AbilityBot
 					this.silent.execute(message);
 				}).build();
 	}
-	
 
-//	public Ability showMyBestellungen()
-//	{
-//		
-//		return Ability.builder().name(ABILTY_NAME_MY_BESTELLUNGEN).info("Zeigt die eigenen Bestellungen").locality(
-//			ALL).privacy(PUBLIC).action(context ->
-//			{
-//				final SendMessage message = new SendMessage();
-//				message.setChatId(Long.toString(context.chatId()));
-//				message.setText(this.loadAndShowMyBestellungen(context.chatId()));
-//				
-//				this.silent.execute(message);
-//			}).build();
-//	}
-	
+	public Ability showMyBestellungen() {
 
-	public Ability showMyBestellungenKeyBoard()
-	{
-		
-		return Ability.builder().name(ABILTY_NAME_MY_BESTELLUNGEN_KEYBOARD).info(
-			"Zeigt die eigenen Bestellungen als keyboard").locality(ALL).privacy(PUBLIC).action(context ->
-			{
-				final SendMessage message = new SendMessage();
-				message.setChatId(Long.toString(context.chatId()));
-				message.setText("Öffne die Bestellungen über die Tastatur: ");
-				
-				final ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
-				final List<KeyboardRow> keyboard = keyBoardBuilder.loadAndShowMyBestellungenAsKeyBoard(context.chatId());
-				
-				// activate the keyboard
-				keyboardMarkup.setKeyboard(keyboard);
-				message.setReplyMarkup(keyboardMarkup);
-				
-				this.silent.execute(message);
-			}).build();
-	}
-	
-	public Ability createNewBestellung()
-	{
-		
-		return Ability.builder().name(ABILTY_NAME_NEUE_BESTELLUNG).info("Erstellt eine neue Bestellung").locality(
-			ALL).privacy(PUBLIC).action(context ->
-			{
-				final SendMessage message = new SendMessage();
-				message.setChatId(Long.toString(context.chatId()));
-				message.setText(keyBoardBuilder.createAndShowNewBestellung(context.chatId()));
-				this.silent.execute(message);
-			}).build();
-	}
-	
-	public Ability addPositionToBestellung()
-	{
-		
-		return Ability.builder()
-				.name(ABILTY_NAME_ADD_POSITION)
-				.info("Fügt eine Position zu einer Bestellung hinzu")
-				.locality(ALL)
-				.privacy(PUBLIC)
-				.input(2)
-				.action(context ->
-			{
-				final SendMessage message = new SendMessage();
-				message.setChatId(Long.toString(context.chatId()));
-				message.setText(this.createPositionForBestellung(context.firstArg(), context.chatId(), Integer.valueOf(context.secondArg())));
-				this.silent.execute(message);
-			}).build();
-	}
-	
-	public Ability sendKeyboard()
-	{
-		return Ability.builder().name("keyboard").info("send a custom keyboard").locality(ALL).privacy(PUBLIC).action(
-			context ->
-			{
-				final SendMessage message = new SendMessage();
-				message.setChatId(Long.toString(context.chatId()));
-				message.setText("Enjoy this wonderful keyboard!");
-				
-				final ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
-				final List<KeyboardRow> keyboard = new ArrayList<>();
-				
-				
-				// row 1
-				final KeyboardRow row = new KeyboardRow();
-				row.add(keyBoardBuilder.createKeyForAbility(ABILTY_NAME_PREISEFOTO));
-				row.add(keyBoardBuilder.createKeyForAbility(ABILTY_NAME_STANDORTEFOTO));
-				keyboard.add(row);
-				
-				
-				
-				
-				// activate the keyboard
-				keyboardMarkup.setKeyboard(keyboard);
-				message.setReplyMarkup(keyboardMarkup);
-				
-				
-
-				
-				this.silent.execute(message);
-			}).build();
+		return Ability.builder().name(ABILTY_NAME_LIST_MY_ORDERS).info("Zeigt die eigenen Bestellungen").locality(ALL)
+				.privacy(PUBLIC).action(context -> {
+					final SendMessage message = new SendMessage();
+					message.setChatId(Long.toString(context.chatId()));
+					message.setText(this.loadAndShowMyBestellungen(context.chatId()));
+					final ReplyKeyboardMarkup keyboardMarkup = keyBoardBuilder.buildOrderMarkup(context);
+					message.setReplyMarkup(keyboardMarkup);
+					this.silent.execute(message);
+				}).build();
 	}
 
-	
-	public Ability showPreiseFoto()
-	{
-		return Ability.builder().name(ABILTY_NAME_PREISEFOTO).info("send Preisfoto").locality(ALL).privacy(
-			PUBLIC).action(context -> this.sendPhotoFromUpload(HENDL_PREISE_JPG, context.chatId())).build();
+	public Ability showMyBestellungenKeyBoard() {
+
+		return Ability.builder().name(ABILTY_NAME_MY_ORDERS_AS_KEYBOARD)
+				.info("Zeigt die eigenen Bestellungen als keyboard").locality(ALL).privacy(PUBLIC).action(context -> {
+					final SendMessage message = new SendMessage();
+					message.setChatId(Long.toString(context.chatId()));
+					message.setText("Öffne die Bestellungen über die Tastatur: ");
+
+					final ReplyKeyboardMarkup keyboardMarkup = keyBoardBuilder.buildOrderMarkup(context);
+					message.setReplyMarkup(keyboardMarkup);
+
+					this.silent.execute(message);
+				}).build();
 	}
-	
-	public Ability showstandorteFoto()
-	{
-		return Ability.builder().name(ABILTY_NAME_STANDORTEFOTO).info("standorteFoto Weiden").locality(ALL).privacy(
-			PUBLIC).action(context -> this.makeScreenshotSenditDeleteit(context.chatId())).build();
+
+	public Ability createNewBestellung() {
+
+		return Ability.builder().name(ABILTY_NAME_NEW_ORDER).info("Erstellt eine neue Bestellung").locality(ALL)
+				.privacy(PUBLIC).action(context -> {
+					final SendMessage message = new SendMessage();
+					message.setChatId(Long.toString(context.chatId()));
+					message.setText(keyBoardBuilder.createAndShowNewBestellung(context.chatId()));
+					this.silent.execute(message);
+				}).build();
 	}
-	
-//	public Ability showstandorteWeiden()
-//	{
-//		return Ability.builder().name("standorte").info("standorte Weiden").locality(ALL).privacy(PUBLIC).action(
-//			context -> this.sendPhotoFromUpload("", context.chatId())).build();
-//	}
-	
-	private void makeScreenshotSenditDeleteit(final Long chatId)
-	{
+
+	public Ability addPositionToBestellung() {
+
+		return Ability.builder().name(ABILTY_NAME_ADD_POSITION).info("Fügt eine Position zu einer Bestellung hinzu")
+				.locality(ALL).privacy(PUBLIC).input(2).action(context -> {
+					final SendMessage message = new SendMessage();
+					message.setChatId(Long.toString(context.chatId()));
+					message.setText(this.createPositionForBestellung(context.firstArg(), context.chatId(),
+							Integer.valueOf(context.secondArg())));
+					this.silent.execute(message);
+				}).build();
+	}
+
+	public Ability sendKeyboard() {
+		return Ability.builder().name("keyboard").info("send a custom keyboard").locality(ALL).privacy(PUBLIC)
+				.action(context -> {
+					final SendMessage message = new SendMessage();
+					message.setChatId(Long.toString(context.chatId()));
+					message.setText("Enjoy this wonderful keyboard!");
+
+					final ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+					final List<KeyboardRow> keyboard = new ArrayList<>();
+
+					// row 1
+					final KeyboardRow row = new KeyboardRow();
+					row.add(keyBoardBuilder.createKeyForAbility(ABILTY_NAME_PRICES_PHOTO));
+					row.add(keyBoardBuilder.createKeyForAbility(ABILTY_NAME_LOCATION_PHOTO));
+					keyboard.add(row);
+
+					// activate the keyboard
+					keyboardMarkup.setKeyboard(keyboard);
+					message.setReplyMarkup(keyboardMarkup);
+
+					this.silent.execute(message);
+				}).build();
+	}
+
+	public Ability showPreiseFoto() {
+		return Ability.builder().name(ABILTY_NAME_PRICES_PHOTO).info("send Preisfoto").locality(ALL).privacy(PUBLIC)
+				.action(context -> this.sendPhotoFromUpload(HENDL_PREISE_JPG, context.chatId())).build();
+	}
+
+	public Ability showstandorteFoto() {
+		return Ability.builder().name(ABILTY_NAME_LOCATION_PHOTO).info("standorteFoto Weiden").locality(ALL)
+				.privacy(PUBLIC).action(context -> this.makeScreenshotSenditDeleteit(context.chatId())).build();
+	}
+
+	private void makeScreenshotSenditDeleteit(final Long chatId) {
 		final String fileName = this.makingScreenshotOfHertlHomepage();
 		this.sendPhotoFromUpload(fileName, chatId);
 		final File fileToDelete = new File(fileName);
 		fileToDelete.delete();
 	}
-	
-	private String makingScreenshotOfHertlHomepage()
-	{
+
+	private String makingScreenshotOfHertlHomepage() {
 		final ProcessBuilder processBuilder = new ProcessBuilder();
-		
+
 		final String hertlTimeStampFileName = "hertl_standorteFoto"
-			+ LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd__HH-mm-ss-SSS"))
-			+ ".png";
+				+ LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd__HH-mm-ss-SSS")) + ".png";
 		// Run a shell script
 		// processBuilder.command("path/to/hello.sh");
-		
+
 		// -- Windows --
-		
+
 		// Run a command
 		// processBuilder.command("cmd.exe", "/c", "dir C:\\Users\\mkyong");
-		
+
 		// Run a bat file
 		// processBuilder.command("C:\\Users\\mkyong\\hello.bat");
-		
-		try
-		{
-			
+
+		try {
+
 			// -- Linux --
-			final String command = "sudo docker run --rm -v $PWD:/srv lifenz/docker-screenshot "
-				+ HERTL_URL
-				+ " "
-				+ hertlTimeStampFileName
-				+ " 1500px 2000 1";
+			final String command = "sudo docker run --rm -v $PWD:/srv lifenz/docker-screenshot " + HERTL_URL + " "
+					+ hertlTimeStampFileName + " 1500px 2000 1";
 			System.out.println(command);
 			// Run a shell command
 			processBuilder.command("bash", "-c", command);
-			
+
 			final Process process = processBuilder.start();
 			System.out.println("Docker gestartet");
-			
+
 			final StringBuilder output = new StringBuilder();
-			
+
 			final BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-			
+
 			String line;
-			while((line = reader.readLine()) != null)
-			{
+			while ((line = reader.readLine()) != null) {
 				output.append(line + "\n");
 			}
-			
+
 			final int exitVal = process.waitFor();
 			System.out.println("exitvalue: " + exitVal);
-			if(exitVal == 0)
-			{
+			if (exitVal == 0) {
 				System.out.println("Success!");
 				System.out.println(output);
 				return hertlTimeStampFileName;
-			}
-			else
-			{
+			} else {
 				return null;
 			}
-			
-		}
-		catch(final IOException e)
-		{
+
+		} catch (final IOException e) {
 			e.printStackTrace();
-		}
-		catch(final InterruptedException e)
-		{
+		} catch (final InterruptedException e) {
 			e.printStackTrace();
 		}
 		return "";
-		
+
 	}
-	
+
 	@VisibleForTesting
-	void setSender(final MessageSender sender)
-	{
+	void setSender(final MessageSender sender) {
 		this.sender = sender;
 	}
-	
+
 	@VisibleForTesting
-	void setSilent(final SilentSender silent)
-	{
+	void setSilent(final SilentSender silent) {
 		this.silent = silent;
 	}
-	
-	private String createPositionForBestellung(
-		final String artikelName,
-		final Long chatId,
-		final Integer bestellungId)
-	{
-		final HertlBotArtikel artikel = hertlBotDao.root().artikels().ofName(artikelName);
-		final HertlBotBestellung bestellung = hertlBotDao.loadBestellung(chatId, bestellungId);
-		final Predicate<HertlBotPosition> positionAlreadyExist =
-			position -> position.getArtikel().getName().equals(artikel.getName());
-		
+
+	private String createPositionForBestellung(final String artikelName, final Long chatId,
+			final Integer bestellungId) {
+		final HertlBotArticle artikel = hertlBotDao.root().artikels().ofName(artikelName);
+		final HertlBotOrder bestellung = hertlBotDao.loadBestellung(chatId, bestellungId);
+		final Predicate<HertlBotPosition> positionAlreadyExist = position -> position.getArtikel().getName()
+				.equals(artikel.getName());
+
 		HertlBotPosition position;
-		
-		final Optional<HertlBotPosition> positionOpt =
-			bestellung.getPositionen().stream().filter(positionAlreadyExist).findFirst();
-		if(positionOpt.isPresent())
-		{
+
+		final Optional<HertlBotPosition> positionOpt = bestellung.getPositionen().stream().filter(positionAlreadyExist)
+				.findFirst();
+		if (positionOpt.isPresent()) {
 			position = positionOpt.get();
-			position.setMenge(position.getMenge().add(
-				BigInteger.valueOf(1L)));
+			position.setMenge(position.getMenge().add(BigInteger.valueOf(1L)));
 			HertlBotRootDao.storageManager().store(position);
-		}
-		else
-		{
+		} else {
 			position = new HertlBotPosition();
 			position.setArtikel(artikel);
 			bestellung.addPosition(position, HertlBotRootDao.storageManager());
 		}
-		
+
 		return this.loadAndShowBestellung(chatId, bestellungId);
-		
+
 	}
 
-	
-	private String loadAndShowBestellung(final Long chatId, final int bestellId)
-	{
-		final HertlBotBestellung bestellung = hertlBotDao.loadBestellung(chatId, bestellId);
+	private String loadAndShowBestellung(final Long chatId, final int bestellId) {
+		final HertlBotOrder bestellung = hertlBotDao.loadBestellung(chatId, bestellId);
 		return bestellung.toString();
 	}
-	
-	public String loadAndShowMyBestellungen(final Long chatId)
-	{
-		
-		final StringBuilder sb = new StringBuilder("Ihre Bestellungen:" + System.lineSeparator());
-		HertlHendlBot.hertlBotDao.loadUser(chatId).getBestellungen().forEach(
-			bestellung -> sb.append(keyBoardBuilder.createBestellungLink(bestellung)));
+
+	public String loadAndShowMyBestellungen(final Long chatId) {
+		final StringBuilder sb = new StringBuilder(
+				"Ihre Bestellungen:" + System.lineSeparator() + System.lineSeparator());
+		HertlHendlBot.hertlBotDao.loadUser(chatId).getBestellungen()
+				.forEach(bestellung -> sb.append(loadAndShowBestellung(chatId, bestellung.getIndex()))
+						.append(System.lineSeparator() + System.lineSeparator()));
 		return sb.toString();
 	}
-	
-	
-	private String loadAndShowAllArtikel()
-	{
+
+	private String loadAndShowAllArtikel() {
 		final StringBuilder sb = new StringBuilder();
-		hertlBotDao.root().artikels().all().forEach(
-			artikel -> sb.append(artikel.toString()).append(System.lineSeparator()));
+		hertlBotDao.root().artikels().all()
+				.forEach(artikel -> sb.append(artikel.toString()).append(System.lineSeparator()));
 		return sb.toString();
 	}
-	
-	
-	
-	
-	
+
 }

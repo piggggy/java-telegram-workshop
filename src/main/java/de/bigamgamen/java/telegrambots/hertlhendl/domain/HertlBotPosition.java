@@ -4,14 +4,14 @@ import java.math.BigInteger;
 
 public class HertlBotPosition {
 	private BigInteger menge = BigInteger.valueOf(1L);
-	private HertlBotArtikel artikel;
-	private HertlBotBestellung bestelllung;
+	private HertlBotArticle artikel;
+	private HertlBotOrder bestelllung;
 	
 	public HertlBotPosition() {
 
 	}
 
-	public HertlBotPosition(BigInteger menge, HertlBotArtikel artikel) {
+	public HertlBotPosition(BigInteger menge, HertlBotArticle artikel) {
 		this.menge = menge;
 		this.artikel = artikel;
 	}
@@ -34,20 +34,20 @@ public class HertlBotPosition {
 		this.menge = menge;
 	}
 
-	public HertlBotArtikel getArtikel() {
+	public HertlBotArticle getArtikel() {
 		return this.artikel;
 	}
 
-	public void setArtikel(final HertlBotArtikel artikel) {
+	public void setArtikel(final HertlBotArticle artikel) {
 		this.artikel = artikel;
 	}
 
-	public HertlBotBestellung getBestelllung()
+	public HertlBotOrder getBestelllung()
 	{
 		return this.bestelllung;
 	}
 
-	public void setBestelllung(final HertlBotBestellung bestelllung)
+	public void setBestelllung(final HertlBotOrder bestelllung)
 	{
 		this.bestelllung = bestelllung;
 	}

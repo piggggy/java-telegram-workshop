@@ -4,7 +4,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Optional;
 
-import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotBestellung;
+import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotOrder;
 import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotRoot;
 import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotUser;
 import one.microstream.storage.configuration.Configuration;
@@ -45,7 +45,7 @@ public class HertlBotRootDao {
 		return (HertlBotRoot) storageManager().root();
 	}
 
-	public HertlBotBestellung loadBestellung(Long chatId, int bestellId) {
+	public HertlBotOrder loadBestellung(Long chatId, int bestellId) {
 		HertlBotUser user = loadUser(chatId);
 
 		return user.getBestellungen().stream().filter(bestellung -> bestellung.getIndex() == bestellId).findFirst()
@@ -65,9 +65,9 @@ public class HertlBotRootDao {
 		return user;
 	}
 
-	public HertlBotBestellung createNewBestellungForUser(Long chatId) {
+	public HertlBotOrder createNewBestellungForUser(Long chatId) {
 		HertlBotUser user = this.loadUser(chatId);
-		HertlBotBestellung bestellung = new HertlBotBestellung(user, new ArrayList<>());
+		HertlBotOrder bestellung = new HertlBotOrder(user, new ArrayList<>());
 		user.addBestellung(bestellung, storageManager);
 
 		return bestellung;

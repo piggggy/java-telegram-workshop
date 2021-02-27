@@ -4,16 +4,16 @@ import java.math.BigInteger;
 
 import de.bigamgamen.java.helper.Pricehelper;
 
-public class HertlBotArtikel {
+public class HertlBotArticle {
 	private int id;
 	private String name;
 	private BigInteger priceInCent;
 
-	public HertlBotArtikel() {
+	public HertlBotArticle() {
 
 	}
 
-	public HertlBotArtikel(int id, String name, BigInteger priceInCent) {
+	public HertlBotArticle(int id, String name, BigInteger priceInCent) {
 		super();
 		this.id = id;
 		this.name = name;

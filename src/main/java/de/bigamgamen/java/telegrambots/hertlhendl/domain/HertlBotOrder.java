@@ -8,7 +8,7 @@ import java.util.List;
 import de.bigamgamen.java.helper.Pricehelper;
 import one.microstream.persistence.types.Persister;
 
-public class HertlBotBestellung {
+public class HertlBotOrder {
 	
 	private static final String BESTELLUNG_TITLE = "Ihre Bestellung:";
 	private static final String DD_MM_YYYY = "dd-MM-yyyy";
@@ -17,11 +17,11 @@ public class HertlBotBestellung {
 	private HertlBotUser user;
 	private List<HertlBotPosition> positionen;
 	
-	public HertlBotBestellung() {
+	public HertlBotOrder() {
 		
 	}
 	
-	public HertlBotBestellung(final HertlBotUser user, final List<HertlBotPosition> positionen) {
+	public HertlBotOrder(final HertlBotUser user, final List<HertlBotPosition> positionen) {
 		this.bestellDatum = LocalDate.now();
 		this.user = user;
 		this.positionen = positionen;
