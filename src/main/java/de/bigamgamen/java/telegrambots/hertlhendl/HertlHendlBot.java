@@ -191,7 +191,7 @@ public class HertlHendlBot extends AbilityBot
 					message.setText(messageText);
 					
 					final ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
-					final List<KeyboardRow> keyboard = this.loadAndShowAllArtikelForBestellung(context.chatId(), bestellId);
+					final List<KeyboardRow> keyboard = keyBoardBuilder.loadAndShowAllArtikelForBestellung(context.chatId(), bestellId);
 
 					// activate the keyboard
 					keyboardMarkup.setKeyboard(keyboard);
@@ -445,8 +445,8 @@ public class HertlHendlBot extends AbilityBot
 		if(positionOpt.isPresent())
 		{
 			position = positionOpt.get();
-			position.getMenge().add(
-				BigInteger.valueOf(1L));
+			position.setMenge(position.getMenge().add(
+				BigInteger.valueOf(1L)));
 			HertlBotRootDao.storageManager().store(position);
 		}
 		else
@@ -485,17 +485,7 @@ public class HertlHendlBot extends AbilityBot
 		return sb.toString();
 	}
 	
-	private List<KeyboardRow> loadAndShowAllArtikelForBestellung(final Long chatId, final Integer bestellungId)
-	{
-		final List<KeyboardRow> keyboard = new ArrayList<>();
-		final KeyboardRow row = new KeyboardRow();
-		
-				hertlBotDao.root().artikels().all().forEach(artikel  -> row.add(keyBoardBuilder.createAddPositiontoBestellungLink(artikel, bestellungId)) );
-		
-		keyboard.add(row);
-		
-		return keyboard;
-	}
+	
 	
 	
 	
