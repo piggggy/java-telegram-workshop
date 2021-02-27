@@ -87,4 +87,9 @@ public class TelegramKeyBoardBuilder {
 	public String createKeyForAbility(final String ability) {
 		return KEY_PRE_SYMBOL + ability;
 	}
+	
+	private void addClearButtonBestellung(List<KeyboardRow> keyboard, HertlBotBestellung bestellung)
+	{
+		
+	}
 }
