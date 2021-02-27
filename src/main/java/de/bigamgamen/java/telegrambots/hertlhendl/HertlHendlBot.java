@@ -147,7 +147,7 @@ public class HertlHendlBot extends AbilityBot {
 		}).build();
 	}
 
-	public Ability showBestellung() {
+	public Ability showOrder() {
 
 		return Ability.builder().name(ABILTY_NAME_ORDER).info("zeigt eine bestimmte Bestellung").locality(ALL)
 				.privacy(PUBLIC).input(1).action(context -> {
@@ -163,7 +163,7 @@ public class HertlHendlBot extends AbilityBot {
 
 					final ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
 					final List<KeyboardRow> keyboard = keyBoardBuilder
-							.loadAndShowAllArtikelForBestellung(context.chatId(), bestellId);
+							.loadAndShowAllArticleForOrder(context.chatId(), bestellId);
 
 					// activate the keyboard
 					keyboardMarkup.setKeyboard(keyboard);
@@ -173,31 +173,31 @@ public class HertlHendlBot extends AbilityBot {
 				}).build();
 	}
 
-	public Ability showArtikel() {
+	public Ability showArticle() {
 
 		return Ability.builder().name(ABILTY_NAME_ITEM).info("Listet alle Artikel auf").locality(ALL).privacy(PUBLIC)
 				.action(context -> {
 					final SendMessage message = new SendMessage();
 					message.setChatId(Long.toString(context.chatId()));
-					message.setText(this.loadAndShowAllArtikel());
+					message.setText(this.loadAndShowAllArticle());
 					this.silent.execute(message);
 				}).build();
 	}
 
-	public Ability showMyBestellungen() {
+	public Ability showMyOrders() {
 
 		return Ability.builder().name(ABILTY_NAME_LIST_MY_ORDERS).info("Zeigt die eigenen Bestellungen").locality(ALL)
 				.privacy(PUBLIC).action(context -> {
 					final SendMessage message = new SendMessage();
 					message.setChatId(Long.toString(context.chatId()));
-					message.setText(this.loadAndShowMyBestellungen(context.chatId()));
+					message.setText(this.loadAndShowMyOrder(context.chatId()));
 					final ReplyKeyboardMarkup keyboardMarkup = keyBoardBuilder.buildOrderMarkup(context);
 					message.setReplyMarkup(keyboardMarkup);
 					this.silent.execute(message);
 				}).build();
 	}
 
-	public Ability showMyBestellungenKeyBoard() {
+	public Ability showMyOrderKeyBoard() {
 
 		return Ability.builder().name(ABILTY_NAME_MY_ORDERS_AS_KEYBOARD)
 				.info("Zeigt die eigenen Bestellungen als keyboard").locality(ALL).privacy(PUBLIC).action(context -> {
@@ -212,24 +212,24 @@ public class HertlHendlBot extends AbilityBot {
 				}).build();
 	}
 
-	public Ability createNewBestellung() {
+	public Ability createNewOrder() {
 
 		return Ability.builder().name(ABILTY_NAME_NEW_ORDER).info("Erstellt eine neue Bestellung").locality(ALL)
 				.privacy(PUBLIC).action(context -> {
 					final SendMessage message = new SendMessage();
 					message.setChatId(Long.toString(context.chatId()));
-					message.setText(keyBoardBuilder.createAndShowNewBestellung(context.chatId()));
+					message.setText(keyBoardBuilder.createAndShowNewOrder(context.chatId()));
 					this.silent.execute(message);
 				}).build();
 	}
 
-	public Ability addPositionToBestellung() {
+	public Ability addPositionToOrder() {
 
 		return Ability.builder().name(ABILTY_NAME_ADD_POSITION).info("Fügt eine Position zu einer Bestellung hinzu")
 				.locality(ALL).privacy(PUBLIC).input(2).action(context -> {
 					final SendMessage message = new SendMessage();
 					message.setChatId(Long.toString(context.chatId()));
-					message.setText(this.createPositionForBestellung(context.firstArg(), context.chatId(),
+					message.setText(this.createPositionForOrder(context.firstArg(), context.chatId(),
 							Integer.valueOf(context.secondArg())));
 					this.silent.execute(message);
 				}).build();
@@ -259,12 +259,12 @@ public class HertlHendlBot extends AbilityBot {
 				}).build();
 	}
 
-	public Ability showPreiseFoto() {
+	public Ability showPricePhoto() {
 		return Ability.builder().name(ABILTY_NAME_PRICES_PHOTO).info("send Preisfoto").locality(ALL).privacy(PUBLIC)
 				.action(context -> this.sendPhotoFromUpload(HENDL_PREISE_JPG, context.chatId())).build();
 	}
 
-	public Ability showstandorteFoto() {
+	public Ability showLocationPhoto() {
 		return Ability.builder().name(ABILTY_NAME_LOCATION_PHOTO).info("standorteFoto Weiden").locality(ALL)
 				.privacy(PUBLIC).action(context -> this.makeScreenshotSenditDeleteit(context.chatId())).build();
 	}
@@ -342,7 +342,7 @@ public class HertlHendlBot extends AbilityBot {
 		this.silent = silent;
 	}
 
-	private String createPositionForBestellung(final String artikelName, final Long chatId,
+	private String createPositionForOrder(final String artikelName, final Long chatId,
 			final Integer bestellungId) {
 		final HertlBotArticle artikel = hertlBotDao.root().artikels().ofName(artikelName);
 		final HertlBotOrder bestellung = hertlBotDao.loadBestellung(chatId, bestellungId);
@@ -363,25 +363,25 @@ public class HertlHendlBot extends AbilityBot {
 			bestellung.addPosition(position, HertlBotRootDao.storageManager());
 		}
 
-		return this.loadAndShowBestellung(chatId, bestellungId);
+		return this.loadAndShowOrder(chatId, bestellungId);
 
 	}
 
-	private String loadAndShowBestellung(final Long chatId, final int bestellId) {
+	private String loadAndShowOrder(final Long chatId, final int bestellId) {
 		final HertlBotOrder bestellung = hertlBotDao.loadBestellung(chatId, bestellId);
 		return bestellung.toString();
 	}
 
-	public String loadAndShowMyBestellungen(final Long chatId) {
+	public String loadAndShowMyOrder(final Long chatId) {
 		final StringBuilder sb = new StringBuilder(
 				"Ihre Bestellungen:" + System.lineSeparator() + System.lineSeparator());
 		HertlHendlBot.hertlBotDao.loadUser(chatId).getBestellungen()
-				.forEach(bestellung -> sb.append(loadAndShowBestellung(chatId, bestellung.getIndex()))
+				.forEach(bestellung -> sb.append(loadAndShowOrder(chatId, bestellung.getIndex()))
 						.append(System.lineSeparator() + System.lineSeparator()));
 		return sb.toString();
 	}
 
-	private String loadAndShowAllArtikel() {
+	private String loadAndShowAllArticle() {
 		final StringBuilder sb = new StringBuilder();
 		hertlBotDao.root().artikels().all()
 				.forEach(artikel -> sb.append(artikel.toString()).append(System.lineSeparator()));

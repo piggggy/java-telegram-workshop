@@ -24,20 +24,20 @@ public class TelegramKeyBoardBuilder {
 		this.hertlBotDao = hertlBotDao;
 	}
 
-	public List<KeyboardRow> loadAndShowMyBestellungenAsKeyBoard(final Long chatId) {
+	public List<KeyboardRow> loadAndShowMyOrdersAsKeyBoard(final Long chatId) {
 		final List<KeyboardRow> keyboard = new ArrayList<>();
 
 		hertlBotDao.loadUser(chatId).getBestellungen()
-				.forEach(bestellung -> addButtonToKeyBoard(keyboard, this.createBestellungLink(bestellung)));
+				.forEach(bestellung -> addButtonToKeyBoard(keyboard, this.createOrderLink(bestellung)));
 
 		return keyboard;
 	}
 
-	public List<KeyboardRow> loadAndShowAllArtikelForBestellung(final Long chatId, final Integer bestellungId) {
+	public List<KeyboardRow> loadAndShowAllArticleForOrder(final Long chatId, final Integer bestellungId) {
 		final List<KeyboardRow> keyboard = new ArrayList<>();
 
 		hertlBotDao.root().artikels().all().forEach(
-				artikel -> addButtonToKeyBoard(keyboard, createAddPositiontoBestellungLink(artikel, bestellungId)));
+				artikel -> addButtonToKeyBoard(keyboard, createAddPositiontoOrderLink(artikel, bestellungId)));
 
 		return keyboard;
 	}
@@ -60,19 +60,19 @@ public class TelegramKeyBoardBuilder {
 
 	}
 
-	public String createAndShowNewBestellung(final Long chatId) {
+	public String createAndShowNewOrder(final Long chatId) {
 
 		final HertlBotOrder bestellung = hertlBotDao.createNewBestellungForUser(chatId);
 
-		return this.createBestellungLink(bestellung);
+		return this.createOrderLink(bestellung);
 	}
 
-	public String createBestellungLink(final HertlBotOrder bestellung) {
+	public String createOrderLink(final HertlBotOrder bestellung) {
 		return this.createKeyForAbility(HertlHendlBot.ABILTY_NAME_ORDER) + " " + Integer.toString(bestellung.getIndex())
 				+ System.lineSeparator();
 	}
 
-	public String createAddPositiontoBestellungLink(final HertlBotArticle artikel, final Integer bestellungId) {
+	public String createAddPositiontoOrderLink(final HertlBotArticle artikel, final Integer bestellungId) {
 		return this.createKeyForAbility(HertlHendlBot.ABILTY_NAME_ADD_POSITION) + " " + artikel.getName() + " "
 				+ bestellungId + System.lineSeparator();
 	}
@@ -87,13 +87,13 @@ public class TelegramKeyBoardBuilder {
 		return KEY_PRE_SYMBOL + ability;
 	}
 
-	private void addClearButtonBestellung(List<KeyboardRow> keyboard, HertlBotOrder bestellung) {
+	private void addClearButtonOrder(List<KeyboardRow> keyboard, HertlBotOrder bestellung) {
 
 	}
 	
 	public ReplyKeyboardMarkup buildOrderMarkup(MessageContext context) {
 		final ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
-		final List<KeyboardRow> keyboard = this.loadAndShowMyBestellungenAsKeyBoard(context.chatId());
+		final List<KeyboardRow> keyboard = this.loadAndShowMyOrdersAsKeyBoard(context.chatId());
 		
 		// activate the keyboard
 		keyboardMarkup.setKeyboard(keyboard);
