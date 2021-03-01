@@ -58,14 +58,18 @@ import org.xml.sax.SAXException;
 import com.google.common.annotations.VisibleForTesting;
 
 import de.bigamgamen.java.helper.IOHelper;
+import de.bigamgamen.java.telegrambots.hertlhendl.api.RightController;
+import de.bigamgamen.java.telegrambots.hertlhendl.api.RoleController;
 import de.bigamgamen.java.telegrambots.hertlhendl.builder.TelegramKeyBoardBuilder;
+import de.bigamgamen.java.telegrambots.hertlhendl.controller.HertlRightController;
 import de.bigamgamen.java.telegrambots.hertlhendl.dal.HertlBotRootDao;
 import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotArticle;
 import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotOrder;
 import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotPosition;
 import de.bigamgamen.java.telegrambots.hertlhendl.init.InitArticles;
 
-public class HertlHendlBot extends AbilityBot {
+public class HertlHendlBot extends AbilityBot
+{
 
 //	public static final String ABILTY_NAME_KEYBOARD = "keyboard";
 	public static final String ABILTY_NAME_LOCATION_PHOTO = "standortefoto";
@@ -76,24 +80,27 @@ public class HertlHendlBot extends AbilityBot {
 	public static final String ABILTY_NAME_LIST_MY_ORDERS = "bestellungenauflistung";
 	public static final String ABILTY_NAME_MY_ORDERS_AS_KEYBOARD = "bestellungenkeyboard";
 	public static final String ABILTY_NAME_NEW_ORDER = "neuebestellung";
-	public static final String ABILTY_NAME_OPEN_ORDERS = "offnenebestellungen";
+	public static final String ABILTY_NAME_MY_OPEN_ORDERS = "meineoffnenebestellungen";
+	public static final String ABILTY_NAME_ADMIN_OPEN_ORDERS = "offnenebestellungen";
 	private static final List<String> abilities = Arrays.asList(
-//		ABILTY_NAME_KEYBOARD,
 			ABILTY_NAME_LOCATION_PHOTO, ABILTY_NAME_PRICES_PHOTO, ABILTY_NAME_ITEM, ABILTY_NAME_LIST_MY_ORDERS,
-			ABILTY_NAME_MY_ORDERS_AS_KEYBOARD, ABILTY_NAME_NEW_ORDER, ABILTY_NAME_OPEN_ORDERS);
+			ABILTY_NAME_MY_ORDERS_AS_KEYBOARD, ABILTY_NAME_NEW_ORDER, ABILTY_NAME_MY_OPEN_ORDERS);
 
 	private static final String HENDL_PREISE_JPG = "hendl_preise.jpg";
 	private final static Logger LOG = LoggerFactory.getLogger(HertlHendlBot.class);
 	private final static String BOT_TOKEN = "";
 	private final static String BOT_USERNAME = "";
-	private static int CREATOR_ID = 929115416;
+	private static Integer CREATOR_ID = 929115416;
 	private static String HERTL_URL = "https://hertel-haehnchen.de/standplatzsuche?search=92637";
 	private static HertlBotRootDao hertlBotDao;
 
 	private final TelegramKeyBoardBuilder keyBoardBuilder;
+	private final RightController rightController;
+	private  RoleController roleController;
 
 	public static void main(final String[] args)
-			throws ParserConfigurationException, SAXException, IOException, URISyntaxException, TelegramApiException {
+			throws ParserConfigurationException, SAXException, IOException, URISyntaxException, TelegramApiException
+	{
 		LOG.info("HertlHendlBot starting");
 
 		// final DBContext db = MapDBContext.onlineInstance("bot.db");
@@ -106,40 +113,51 @@ public class HertlHendlBot extends AbilityBot {
 	}
 
 	public HertlHendlBot(final String botToken, final String botUsername)
-			throws ParserConfigurationException, SAXException, IOException, URISyntaxException {
+			throws ParserConfigurationException, SAXException, IOException, URISyntaxException
+	{
 		super(botToken, botUsername);
 		hertlBotDao = new HertlBotRootDao();
 		InitArticles.initArtikels(hertlBotDao);
 		this.keyBoardBuilder = new TelegramKeyBoardBuilder(hertlBotDao);
+		this.rightController = new HertlRightController(CREATOR_ID);
 	}
 
 	@Override
-	public int creatorId() {
+	public int creatorId()
+	{
 		return CREATOR_ID;
 	}
 
-	private void sendPhotoFromUpload(final String filePath, final Long chatId) {
+	private void sendPhotoFromUpload(final String filePath, final Long chatId)
+	{
 		final SendPhoto sendPhotoRequest = new SendPhoto(); // 1
 		sendPhotoRequest.setChatId(Long.toString(chatId)); // 2
-		try {
+		try
+		{
 			sendPhotoRequest.setPhoto(new InputFile(IOHelper.findResource(filePath), filePath));
-		} catch (final FileNotFoundException e1) {
+		} catch (final FileNotFoundException e1)
+		{
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
-		} catch (final IOException e1) {
+		} catch (final IOException e1)
+		{
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		} // 3
-		try {
+		try
+		{
 			this.execute(sendPhotoRequest); // 4
-		} catch (final TelegramApiException e) {
+		} catch (final TelegramApiException e)
+		{
 			e.printStackTrace();
 		}
 	}
 
-	public Ability showHelp() {
+	public Ability showHelp()
+	{
 
-		return Ability.builder().name("help").info("shows help").locality(ALL).privacy(PUBLIC).action(context -> {
+		return Ability.builder().name("help").info("shows help").locality(ALL).privacy(PUBLIC).action(context ->
+		{
 			final SendMessage message = new SendMessage();
 			message.setChatId(Long.toString(context.chatId()));
 			message.setText(keyBoardBuilder.createAbilityListForHelp(abilities));
@@ -147,10 +165,12 @@ public class HertlHendlBot extends AbilityBot {
 		}).build();
 	}
 
-	public Ability showOrder() {
+	public Ability showOrder()
+	{
 
 		return Ability.builder().name(ABILTY_NAME_ORDER).info("zeigt eine bestimmte Bestellung").locality(ALL)
-				.privacy(PUBLIC).input(1).action(context -> {
+				.privacy(PUBLIC).input(1).action(context ->
+				{
 					final int bestellId = Integer.parseInt(context.firstArg());
 					final Long chatId = context.chatId();
 					final HertlBotOrder bestellung = hertlBotDao.loadBestellung(chatId, bestellId);
@@ -173,10 +193,12 @@ public class HertlHendlBot extends AbilityBot {
 				}).build();
 	}
 
-	public Ability showArticle() {
+	public Ability showArticle()
+	{
 
 		return Ability.builder().name(ABILTY_NAME_ITEM).info("Listet alle Artikel auf").locality(ALL).privacy(PUBLIC)
-				.action(context -> {
+				.action(context ->
+				{
 					final SendMessage message = new SendMessage();
 					message.setChatId(Long.toString(context.chatId()));
 					message.setText(this.loadAndShowAllArticle());
@@ -184,10 +206,12 @@ public class HertlHendlBot extends AbilityBot {
 				}).build();
 	}
 
-	public Ability showMyOrders() {
+	public Ability showMyOrders()
+	{
 
 		return Ability.builder().name(ABILTY_NAME_LIST_MY_ORDERS).info("Zeigt die eigenen Bestellungen").locality(ALL)
-				.privacy(PUBLIC).action(context -> {
+				.privacy(PUBLIC).action(context ->
+				{
 					final SendMessage message = new SendMessage();
 					message.setChatId(Long.toString(context.chatId()));
 					message.setText(this.loadAndShowMyOrder(context.chatId()));
@@ -197,10 +221,12 @@ public class HertlHendlBot extends AbilityBot {
 				}).build();
 	}
 
-	public Ability showMyOrderKeyBoard() {
+	public Ability showMyOrderKeyBoard()
+	{
 
 		return Ability.builder().name(ABILTY_NAME_MY_ORDERS_AS_KEYBOARD)
-				.info("Zeigt die eigenen Bestellungen als keyboard").locality(ALL).privacy(PUBLIC).action(context -> {
+				.info("Zeigt die eigenen Bestellungen als keyboard").locality(ALL).privacy(PUBLIC).action(context ->
+				{
 					final SendMessage message = new SendMessage();
 					message.setChatId(Long.toString(context.chatId()));
 					message.setText("Öffne die Bestellungen über die Tastatur: ");
@@ -212,10 +238,12 @@ public class HertlHendlBot extends AbilityBot {
 				}).build();
 	}
 
-	public Ability createNewOrder() {
+	public Ability createNewOrder()
+	{
 
 		return Ability.builder().name(ABILTY_NAME_NEW_ORDER).info("Erstellt eine neue Bestellung").locality(ALL)
-				.privacy(PUBLIC).action(context -> {
+				.privacy(PUBLIC).action(context ->
+				{
 					final SendMessage message = new SendMessage();
 					message.setChatId(Long.toString(context.chatId()));
 					message.setText(keyBoardBuilder.createAndShowNewOrder(context.chatId()));
@@ -223,10 +251,12 @@ public class HertlHendlBot extends AbilityBot {
 				}).build();
 	}
 
-	public Ability addPositionToOrder() {
+	public Ability addPositionToOrder()
+	{
 
 		return Ability.builder().name(ABILTY_NAME_ADD_POSITION).info("Fügt eine Position zu einer Bestellung hinzu")
-				.locality(ALL).privacy(PUBLIC).input(2).action(context -> {
+				.locality(ALL).privacy(PUBLIC).input(2).action(context ->
+				{
 					final SendMessage message = new SendMessage();
 					message.setChatId(Long.toString(context.chatId()));
 					message.setText(this.createPositionForOrder(context.firstArg(), context.chatId(),
@@ -235,9 +265,11 @@ public class HertlHendlBot extends AbilityBot {
 				}).build();
 	}
 
-	public Ability sendKeyboard() {
+	public Ability sendKeyboard()
+	{
 		return Ability.builder().name("keyboard").info("send a custom keyboard").locality(ALL).privacy(PUBLIC)
-				.action(context -> {
+				.action(context ->
+				{
 					final SendMessage message = new SendMessage();
 					message.setChatId(Long.toString(context.chatId()));
 					message.setText("Enjoy this wonderful keyboard!");
@@ -259,24 +291,28 @@ public class HertlHendlBot extends AbilityBot {
 				}).build();
 	}
 
-	public Ability showPricePhoto() {
+	public Ability showPricePhoto()
+	{
 		return Ability.builder().name(ABILTY_NAME_PRICES_PHOTO).info("send Preisfoto").locality(ALL).privacy(PUBLIC)
 				.action(context -> this.sendPhotoFromUpload(HENDL_PREISE_JPG, context.chatId())).build();
 	}
 
-	public Ability showLocationPhoto() {
+	public Ability showLocationPhoto()
+	{
 		return Ability.builder().name(ABILTY_NAME_LOCATION_PHOTO).info("standorteFoto Weiden").locality(ALL)
 				.privacy(PUBLIC).action(context -> this.makeScreenshotSenditDeleteit(context.chatId())).build();
 	}
 
-	private void makeScreenshotSenditDeleteit(final Long chatId) {
+	private void makeScreenshotSenditDeleteit(final Long chatId)
+	{
 		final String fileName = this.makingScreenshotOfHertlHomepage();
 		this.sendPhotoFromUpload(fileName, chatId);
 		final File fileToDelete = new File(fileName);
 		fileToDelete.delete();
 	}
 
-	private String makingScreenshotOfHertlHomepage() {
+	private String makingScreenshotOfHertlHomepage()
+	{
 		final ProcessBuilder processBuilder = new ProcessBuilder();
 
 		final String hertlTimeStampFileName = "hertl_standorteFoto"
@@ -292,7 +328,8 @@ public class HertlHendlBot extends AbilityBot {
 		// Run a bat file
 		// processBuilder.command("C:\\Users\\mkyong\\hello.bat");
 
-		try {
+		try
+		{
 
 			// -- Linux --
 			final String command = "sudo docker run --rm -v $PWD:/srv lifenz/docker-screenshot " + HERTL_URL + " "
@@ -309,23 +346,28 @@ public class HertlHendlBot extends AbilityBot {
 			final BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 
 			String line;
-			while ((line = reader.readLine()) != null) {
+			while ((line = reader.readLine()) != null)
+			{
 				output.append(line + "\n");
 			}
 
 			final int exitVal = process.waitFor();
 			System.out.println("exitvalue: " + exitVal);
-			if (exitVal == 0) {
+			if (exitVal == 0)
+			{
 				System.out.println("Success!");
 				System.out.println(output);
 				return hertlTimeStampFileName;
-			} else {
+			} else
+			{
 				return null;
 			}
 
-		} catch (final IOException e) {
+		} catch (final IOException e)
+		{
 			e.printStackTrace();
-		} catch (final InterruptedException e) {
+		} catch (final InterruptedException e)
+		{
 			e.printStackTrace();
 		}
 		return "";
@@ -333,17 +375,20 @@ public class HertlHendlBot extends AbilityBot {
 	}
 
 	@VisibleForTesting
-	void setSender(final MessageSender sender) {
+	void setSender(final MessageSender sender)
+	{
 		this.sender = sender;
 	}
 
 	@VisibleForTesting
-	void setSilent(final SilentSender silent) {
+	void setSilent(final SilentSender silent)
+	{
 		this.silent = silent;
 	}
 
 	private String createPositionForOrder(final String artikelName, final Long chatId,
-			final Integer bestellungId) {
+			final Integer bestellungId)
+	{
 		final HertlBotArticle artikel = hertlBotDao.root().artikels().ofName(artikelName);
 		final HertlBotOrder bestellung = hertlBotDao.loadBestellung(chatId, bestellungId);
 		final Predicate<HertlBotPosition> positionAlreadyExist = position -> position.getArtikel().getName()
@@ -353,11 +398,13 @@ public class HertlHendlBot extends AbilityBot {
 
 		final Optional<HertlBotPosition> positionOpt = bestellung.getPositionen().stream().filter(positionAlreadyExist)
 				.findFirst();
-		if (positionOpt.isPresent()) {
+		if (positionOpt.isPresent())
+		{
 			position = positionOpt.get();
 			position.setMenge(position.getMenge().add(BigInteger.valueOf(1L)));
 			HertlBotRootDao.storageManager().store(position);
-		} else {
+		} else
+		{
 			position = new HertlBotPosition();
 			position.setArtikel(artikel);
 			bestellung.addPosition(position, HertlBotRootDao.storageManager());
@@ -367,12 +414,14 @@ public class HertlHendlBot extends AbilityBot {
 
 	}
 
-	private String loadAndShowOrder(final Long chatId, final int bestellId) {
+	private String loadAndShowOrder(final Long chatId, final int bestellId)
+	{
 		final HertlBotOrder bestellung = hertlBotDao.loadBestellung(chatId, bestellId);
 		return bestellung.toString();
 	}
 
-	public String loadAndShowMyOrder(final Long chatId) {
+	public String loadAndShowMyOrder(final Long chatId)
+	{
 		final StringBuilder sb = new StringBuilder(
 				"Ihre Bestellungen:" + System.lineSeparator() + System.lineSeparator());
 		HertlHendlBot.hertlBotDao.loadUser(chatId).getBestellungen()
@@ -381,7 +430,8 @@ public class HertlHendlBot extends AbilityBot {
 		return sb.toString();
 	}
 
-	private String loadAndShowAllArticle() {
+	private String loadAndShowAllArticle()
+	{
 		final StringBuilder sb = new StringBuilder();
 		hertlBotDao.root().artikels().all()
 				.forEach(artikel -> sb.append(artikel.toString()).append(System.lineSeparator()));
