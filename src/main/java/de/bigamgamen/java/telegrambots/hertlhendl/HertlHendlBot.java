@@ -62,6 +62,7 @@ import de.bigamgamen.java.telegrambots.hertlhendl.api.RightController;
 import de.bigamgamen.java.telegrambots.hertlhendl.api.RoleController;
 import de.bigamgamen.java.telegrambots.hertlhendl.builder.TelegramKeyBoardBuilder;
 import de.bigamgamen.java.telegrambots.hertlhendl.controller.HertlRightController;
+import de.bigamgamen.java.telegrambots.hertlhendl.controller.HertlRoleController;
 import de.bigamgamen.java.telegrambots.hertlhendl.dal.HertlBotRootDao;
 import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotArticle;
 import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotOrder;
@@ -71,19 +72,17 @@ import de.bigamgamen.java.telegrambots.hertlhendl.init.InitArticles;
 public class HertlHendlBot extends AbilityBot
 {
 
-	public static final String ABILTY_NAME_LOCATION_PHOTO = "standortefoto";
-	public static final String ABILTY_NAME_PRICES_PHOTO = "preisefoto";
-	public static final String ABILTY_NAME_ORDER = "bestellung";
-	public static final String ABILTY_NAME_ITEM = "artikel";
-	public static final String ABILTY_NAME_ADD_POSITION = "addposition";
-	public static final String ABILTY_NAME_LIST_MY_ORDERS = "bestellungenauflistung";
-	public static final String ABILTY_NAME_MY_ORDERS_AS_KEYBOARD = "bestellungenkeyboard";
-	public static final String ABILTY_NAME_NEW_ORDER = "neuebestellung";
-	public static final String ABILTY_NAME_MY_OPEN_ORDERS = "meineoffnenebestellungen";
-	public static final String ABILTY_NAME_ADMIN_OPEN_ORDERS = "offnenebestellungen";
-	private static final List<String> abilities = Arrays.asList(
-			ABILTY_NAME_LOCATION_PHOTO, ABILTY_NAME_PRICES_PHOTO, ABILTY_NAME_ITEM, ABILTY_NAME_LIST_MY_ORDERS,
-			ABILTY_NAME_MY_ORDERS_AS_KEYBOARD, ABILTY_NAME_NEW_ORDER, ABILTY_NAME_MY_OPEN_ORDERS);
+	public static final String ABILITY_NAME_HELP = "help";
+	public static final String ABILITY_NAME_LOCATION_PHOTO = "standortefoto";
+	public static final String ABILITY_NAME_PRICES_PHOTO = "preisefoto";
+	public static final String ABILITY_NAME_ORDER = "bestellung";
+	public static final String ABILITY_NAME_ITEM = "artikel";
+	public static final String ABILITY_NAME_ADD_POSITION = "addposition";
+	public static final String ABILITY_NAME_LIST_MY_ORDERS = "bestellungenauflistung";
+	public static final String ABILITY_NAME_MY_ORDERS_AS_KEYBOARD = "bestellungenkeyboard";
+	public static final String ABILITY_NAME_NEW_ORDER = "neuebestellung";
+	public static final String ABILITY_NAME_MY_OPEN_ORDERS = "meineoffnenebestellungen";
+	public static final String ABILITY_NAME_ADMIN_OPEN_ORDERS = "adminoffnenebestellungen";
 
 	private static final String HENDL_PREISE_JPG = "hendl_preise.jpg";
 	private final static Logger LOG = LoggerFactory.getLogger(HertlHendlBot.class);
@@ -96,7 +95,7 @@ public class HertlHendlBot extends AbilityBot
 
 	private final TelegramKeyBoardBuilder keyBoardBuilder;
 	private final RightController rightController;
-	private  RoleController roleController;
+	private RoleController roleController;
 
 	public static void main(final String[] args)
 			throws ParserConfigurationException, SAXException, IOException, URISyntaxException, TelegramApiException
@@ -106,7 +105,7 @@ public class HertlHendlBot extends AbilityBot
 		final String token = args[0] != null ? args[0] : BOT_TOKEN;
 		final String username = args[1] != null ? args[1] : BOT_USERNAME;
 		final Long adminId = args[2] != null ? Long.parseLong(args[2]) : ADMIN_ID;
-		final HertlHendlBot bot = new HertlHendlBot(token, username,adminId);
+		final HertlHendlBot bot = new HertlHendlBot(token, username, adminId);
 		TelegramBotsApi api = new TelegramBotsApi(DefaultBotSession.class);
 		api.registerBot(bot);
 		LOG.info("HertlHendlBot successfull started");
@@ -120,6 +119,7 @@ public class HertlHendlBot extends AbilityBot
 		InitArticles.initArtikels(hertlBotDao);
 		this.keyBoardBuilder = new TelegramKeyBoardBuilder(hertlBotDao);
 		this.rightController = new HertlRightController(adminId);
+		this.roleController = new HertlRoleController(rightController);
 	}
 
 	@Override
@@ -128,116 +128,137 @@ public class HertlHendlBot extends AbilityBot
 		return CREATOR_ID;
 	}
 
-
 	public Ability showHelp()
 	{
 
-		return Ability.builder().name("help").info("shows help").locality(ALL).privacy(PUBLIC).action(context ->
-		{
-			final SendMessage message = new SendMessage();
-			message.setChatId(Long.toString(context.chatId()));
-			message.setText(keyBoardBuilder.createAbilityListForHelp(abilities));
-			this.silent.execute(message);
-		}).build();
+		return Ability.builder().name(ABILITY_NAME_HELP).info("shows help").locality(ALL).privacy(PUBLIC)
+				.action(context ->
+				{
+					if (roleController.canUseAbility(context.user(), ABILITY_NAME_HELP))
+					{
+						final SendMessage message = new SendMessage();
+						message.setChatId(Long.toString(context.chatId()));
+						message.setText(keyBoardBuilder.createAbilityListForHelp(roleController.getAbilitiesForUser(context.user())));
+						this.silent.execute(message);
+					}
+				}).build();
 	}
 
 	public Ability showOrder()
 	{
 
-		return Ability.builder().name(ABILTY_NAME_ORDER).info("zeigt eine bestimmte Bestellung").locality(ALL)
+		return Ability.builder().name(ABILITY_NAME_ORDER).info("zeigt eine bestimmte Bestellung").locality(ALL)
 				.privacy(PUBLIC).input(1).action(context ->
 				{
-					final int bestellId = Integer.parseInt(context.firstArg());
-					final Long chatId = context.chatId();
-					final HertlBotOrder bestellung = hertlBotDao.loadBestellung(chatId, bestellId);
-					final SendMessage message = new SendMessage();
-					message.setChatId(Long.toString(context.chatId()));
-					final String messageText = bestellung.toString() + System.lineSeparator()
-							+ "Füge Positionen zu deiner Bestellung hinzu";
+					if (roleController.canUseAbility(context.user(), ABILITY_NAME_HELP))
+					{
+						final int bestellId = Integer.parseInt(context.firstArg());
+						final Long chatId = context.chatId();
+						final HertlBotOrder bestellung = hertlBotDao.loadBestellung(chatId, bestellId);
+						final SendMessage message = new SendMessage();
+						message.setChatId(Long.toString(context.chatId()));
+						final String messageText = bestellung.toString() + System.lineSeparator()
+								+ "Füge Positionen zu deiner Bestellung hinzu";
 
-					message.setText(messageText);
+						message.setText(messageText);
 
-					final ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
-					final List<KeyboardRow> keyboard = keyBoardBuilder
-							.loadAndShowAllArticleForOrder(context.chatId(), bestellId);
+						final ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+						final List<KeyboardRow> keyboard = keyBoardBuilder
+								.loadAndShowAllArticleForOrder(context.chatId(), bestellId);
 
-					// activate the keyboard
-					keyboardMarkup.setKeyboard(keyboard);
-					message.setReplyMarkup(keyboardMarkup);
+						// activate the keyboard
+						keyboardMarkup.setKeyboard(keyboard);
+						message.setReplyMarkup(keyboardMarkup);
 
-					this.silent.execute(message);
+						this.silent.execute(message);
+					}
 				}).build();
 	}
 
 	public Ability showArticle()
 	{
 
-		return Ability.builder().name(ABILTY_NAME_ITEM).info("Listet alle Artikel auf").locality(ALL).privacy(PUBLIC)
+		return Ability.builder().name(ABILITY_NAME_ITEM).info("Listet alle Artikel auf").locality(ALL).privacy(PUBLIC)
 				.action(context ->
 				{
-					final SendMessage message = new SendMessage();
-					message.setChatId(Long.toString(context.chatId()));
-					message.setText(this.loadAndShowAllArticle());
-					this.silent.execute(message);
+					if (roleController.canUseAbility(context.user(), ABILITY_NAME_HELP))
+					{
+						final SendMessage message = new SendMessage();
+						message.setChatId(Long.toString(context.chatId()));
+						message.setText(this.loadAndShowAllArticle());
+						this.silent.execute(message);
+					}
 				}).build();
 	}
 
 	public Ability showMyOrders()
 	{
 
-		return Ability.builder().name(ABILTY_NAME_LIST_MY_ORDERS).info("Zeigt die eigenen Bestellungen").locality(ALL)
+		return Ability.builder().name(ABILITY_NAME_LIST_MY_ORDERS).info("Zeigt die eigenen Bestellungen").locality(ALL)
 				.privacy(PUBLIC).action(context ->
 				{
-					final SendMessage message = new SendMessage();
-					message.setChatId(Long.toString(context.chatId()));
-					message.setText(this.loadAndShowMyOrder(context.chatId()));
-					final ReplyKeyboardMarkup keyboardMarkup = keyBoardBuilder.buildOrderMarkup(context);
-					message.setReplyMarkup(keyboardMarkup);
-					this.silent.execute(message);
+					if (roleController.canUseAbility(context.user(), ABILITY_NAME_HELP))
+					{
+						final SendMessage message = new SendMessage();
+						message.setChatId(Long.toString(context.chatId()));
+						message.setText(this.loadAndShowMyOrder(context.chatId()));
+						final ReplyKeyboardMarkup keyboardMarkup = keyBoardBuilder.buildOrderMarkup(context);
+						message.setReplyMarkup(keyboardMarkup);
+						this.silent.execute(message);
+					}
 				}).build();
 	}
 
 	public Ability showMyOrderKeyBoard()
 	{
 
-		return Ability.builder().name(ABILTY_NAME_MY_ORDERS_AS_KEYBOARD)
+		return Ability.builder().name(ABILITY_NAME_MY_ORDERS_AS_KEYBOARD)
 				.info("Zeigt die eigenen Bestellungen als keyboard").locality(ALL).privacy(PUBLIC).action(context ->
 				{
-					final SendMessage message = new SendMessage();
-					message.setChatId(Long.toString(context.chatId()));
-					message.setText("Öffne die Bestellungen über die Tastatur: ");
+					if (roleController.canUseAbility(context.user(), ABILITY_NAME_HELP))
+					{
+						final SendMessage message = new SendMessage();
+						message.setChatId(Long.toString(context.chatId()));
+						message.setText("Öffne die Bestellungen über die Tastatur: ");
 
-					final ReplyKeyboardMarkup keyboardMarkup = keyBoardBuilder.buildOrderMarkup(context);
-					message.setReplyMarkup(keyboardMarkup);
+						final ReplyKeyboardMarkup keyboardMarkup = keyBoardBuilder.buildOrderMarkup(context);
+						message.setReplyMarkup(keyboardMarkup);
 
-					this.silent.execute(message);
+						this.silent.execute(message);
+					}
 				}).build();
 	}
 
 	public Ability createNewOrder()
 	{
 
-		return Ability.builder().name(ABILTY_NAME_NEW_ORDER).info("Erstellt eine neue Bestellung").locality(ALL)
+		return Ability.builder().name(ABILITY_NAME_NEW_ORDER).info("Erstellt eine neue Bestellung").locality(ALL)
 				.privacy(PUBLIC).action(context ->
 				{
-					final SendMessage message = new SendMessage();
-					message.setChatId(Long.toString(context.chatId()));
-					message.setText(keyBoardBuilder.createAndShowNewOrder(context.chatId()));
-					this.silent.execute(message);
+					if (roleController.canUseAbility(context.user(), ABILITY_NAME_HELP))
+					{
+						final SendMessage message = new SendMessage();
+						message.setChatId(Long.toString(context.chatId()));
+						message.setText(keyBoardBuilder.createAndShowNewOrder(context.chatId()));
+						this.silent.execute(message);
+					}
 				}).build();
 	}
 
 	public Ability addPositionToOrder()
 	{
 
-		return Ability.builder().name(ABILTY_NAME_ADD_POSITION).info("Fügt eine Position zu einer Bestellung hinzu")
+		return Ability.builder().name(ABILITY_NAME_ADD_POSITION).info("Fügt eine Position zu einer Bestellung hinzu")
 				.locality(ALL).privacy(PUBLIC).input(2).action(context ->
 				{
-					final SendMessage message = new SendMessage();
-					message.setChatId(Long.toString(context.chatId()));
-					message.setText(this.createPositionForOrder(context.firstArg(), context.chatId(),
-							Integer.valueOf(context.secondArg())));
-					this.silent.execute(message);
+					if (roleController.canUseAbility(context.user(), ABILITY_NAME_HELP))
+					{
+						final SendMessage message = new SendMessage();
+						message.setChatId(Long.toString(context.chatId()));
+						message.setText(this.createPositionForOrder(context.firstArg(), context.chatId(),
+								Integer.valueOf(context.secondArg())));
+						this.silent.execute(message);
+					}
 				}).build();
 	}
 
@@ -246,37 +267,52 @@ public class HertlHendlBot extends AbilityBot
 		return Ability.builder().name("keyboard").info("send a custom keyboard").locality(ALL).privacy(PUBLIC)
 				.action(context ->
 				{
-					final SendMessage message = new SendMessage();
-					message.setChatId(Long.toString(context.chatId()));
-					message.setText("Enjoy this wonderful keyboard!");
+					if (roleController.canUseAbility(context.user(), ABILITY_NAME_HELP))
+					{
+						final SendMessage message = new SendMessage();
+						message.setChatId(Long.toString(context.chatId()));
+						message.setText("Enjoy this wonderful keyboard!");
 
-					final ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
-					final List<KeyboardRow> keyboard = new ArrayList<>();
+						final ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+						final List<KeyboardRow> keyboard = new ArrayList<>();
 
-					// row 1
-					final KeyboardRow row = new KeyboardRow();
-					row.add(keyBoardBuilder.createKeyForAbility(ABILTY_NAME_PRICES_PHOTO));
-					row.add(keyBoardBuilder.createKeyForAbility(ABILTY_NAME_LOCATION_PHOTO));
-					keyboard.add(row);
+						// row 1
+						final KeyboardRow row = new KeyboardRow();
+						row.add(keyBoardBuilder.createKeyForAbility(ABILITY_NAME_PRICES_PHOTO));
+						row.add(keyBoardBuilder.createKeyForAbility(ABILITY_NAME_LOCATION_PHOTO));
+						keyboard.add(row);
 
-					// activate the keyboard
-					keyboardMarkup.setKeyboard(keyboard);
-					message.setReplyMarkup(keyboardMarkup);
+						// activate the keyboard
+						keyboardMarkup.setKeyboard(keyboard);
+						message.setReplyMarkup(keyboardMarkup);
 
-					this.silent.execute(message);
+						this.silent.execute(message);
+					}
 				}).build();
 	}
 
 	public Ability showPricePhoto()
 	{
-		return Ability.builder().name(ABILTY_NAME_PRICES_PHOTO).info("send Preisfoto").locality(ALL).privacy(PUBLIC)
-				.action(context -> this.sendPhotoFromUpload(HENDL_PREISE_JPG, context.chatId())).build();
+		return Ability.builder().name(ABILITY_NAME_PRICES_PHOTO).info("send Preisfoto").locality(ALL).privacy(PUBLIC)
+				.action(context ->
+				{
+					if (roleController.canUseAbility(context.user(), ABILITY_NAME_HELP))
+					{
+						this.sendPhotoFromUpload(HENDL_PREISE_JPG, context.chatId());
+					}
+				}).build();
 	}
 
 	public Ability showLocationPhoto()
 	{
-		return Ability.builder().name(ABILTY_NAME_LOCATION_PHOTO).info("standorteFoto Weiden").locality(ALL)
-				.privacy(PUBLIC).action(context -> this.makeScreenshotSenditDeleteit(context.chatId())).build();
+		return Ability.builder().name(ABILITY_NAME_LOCATION_PHOTO).info("standorteFoto Weiden").locality(ALL)
+				.privacy(PUBLIC).action(context ->
+				{
+					if (roleController.canUseAbility(context.user(), ABILITY_NAME_HELP))
+					{
+						this.makeScreenshotSenditDeleteit(context.chatId());
+					}
+				}).build();
 	}
 
 	private void makeScreenshotSenditDeleteit(final Long chatId)
@@ -286,7 +322,6 @@ public class HertlHendlBot extends AbilityBot
 		final File fileToDelete = new File(fileName);
 		fileToDelete.delete();
 	}
-	
 
 	private void sendPhotoFromUpload(final String filePath, final Long chatId)
 	{
@@ -297,13 +332,13 @@ public class HertlHendlBot extends AbilityBot
 			sendPhotoRequest.setPhoto(new InputFile(IOHelper.findResource(filePath), filePath));
 		} catch (final Exception e1)
 		{
-			LOG.error("Fehler beim schicken des Photos:{}",e1);
-		} 
+			LOG.error("Fehler beim schicken des Photos:{}", e1);
+		}
 	}
 
 	/**
-	 * Make an Screenshot of the Hmepage with docker.
-	 * Works only on Linux
+	 * Make an Screenshot of the Hmepage with docker. Works only on Linux
+	 * 
 	 * @return Fullqualified Filename to load from Hdd.
 	 */
 	private String makingScreenshotOfHertlHomepage()

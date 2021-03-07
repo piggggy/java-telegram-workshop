@@ -68,12 +68,12 @@ public class TelegramKeyBoardBuilder {
 	}
 
 	public String createOrderLink(final HertlBotOrder bestellung) {
-		return this.createKeyForAbility(HertlHendlBot.ABILTY_NAME_ORDER) + " " + Integer.toString(bestellung.getIndex())
+		return this.createKeyForAbility(HertlHendlBot.ABILITY_NAME_ORDER) + " " + Integer.toString(bestellung.getIndex())
 				+ System.lineSeparator();
 	}
 
 	public String createAddPositiontoOrderLink(final HertlBotArticle artikel, final Integer bestellungId) {
-		return this.createKeyForAbility(HertlHendlBot.ABILTY_NAME_ADD_POSITION) + " " + artikel.getName() + " "
+		return this.createKeyForAbility(HertlHendlBot.ABILITY_NAME_ADD_POSITION) + " " + artikel.getName() + " "
 				+ bestellungId + System.lineSeparator();
 	}
 

@@ -11,5 +11,13 @@ public interface RoleController {
 	 * @param user
 	 * @return
 	 */
-	public List<String> getKeyBoardShortcutsForUser(User user);
+	public List<String> getAbilitiesForUser(User user);
+	
+	/**
+	 * Checks if the user can use the Ability
+	 * @param ability
+	 * @param user
+	 * @return
+	 */
+	public Boolean canUseAbility(User user, String ability);
 }
