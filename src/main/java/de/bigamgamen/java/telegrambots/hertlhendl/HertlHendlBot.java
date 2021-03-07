@@ -71,7 +71,6 @@ import de.bigamgamen.java.telegrambots.hertlhendl.init.InitArticles;
 public class HertlHendlBot extends AbilityBot
 {
 
-//	public static final String ABILTY_NAME_KEYBOARD = "keyboard";
 	public static final String ABILTY_NAME_LOCATION_PHOTO = "standortefoto";
 	public static final String ABILTY_NAME_PRICES_PHOTO = "preisefoto";
 	public static final String ABILTY_NAME_ORDER = "bestellung";
@@ -90,6 +89,7 @@ public class HertlHendlBot extends AbilityBot
 	private final static Logger LOG = LoggerFactory.getLogger(HertlHendlBot.class);
 	private final static String BOT_TOKEN = "";
 	private final static String BOT_USERNAME = "";
+	private final static Long ADMIN_ID = 0L;
 	private static Integer CREATOR_ID = 929115416;
 	private static String HERTL_URL = "https://hertel-haehnchen.de/standplatzsuche?search=92637";
 	private static HertlBotRootDao hertlBotDao;
@@ -103,23 +103,23 @@ public class HertlHendlBot extends AbilityBot
 	{
 		LOG.info("HertlHendlBot starting");
 
-		// final DBContext db = MapDBContext.onlineInstance("bot.db");
 		final String token = args[0] != null ? args[0] : BOT_TOKEN;
 		final String username = args[1] != null ? args[1] : BOT_USERNAME;
-		final HertlHendlBot bot = new HertlHendlBot(token, username);
+		final Long adminId = args[2] != null ? Long.parseLong(args[2]) : ADMIN_ID;
+		final HertlHendlBot bot = new HertlHendlBot(token, username,adminId);
 		TelegramBotsApi api = new TelegramBotsApi(DefaultBotSession.class);
 		api.registerBot(bot);
 		LOG.info("HertlHendlBot successfull started");
 	}
 
-	public HertlHendlBot(final String botToken, final String botUsername)
+	public HertlHendlBot(final String botToken, final String botUsername, final Long adminId)
 			throws ParserConfigurationException, SAXException, IOException, URISyntaxException
 	{
 		super(botToken, botUsername);
 		hertlBotDao = new HertlBotRootDao();
 		InitArticles.initArtikels(hertlBotDao);
 		this.keyBoardBuilder = new TelegramKeyBoardBuilder(hertlBotDao);
-		this.rightController = new HertlRightController(CREATOR_ID);
+		this.rightController = new HertlRightController(adminId);
 	}
 
 	@Override
@@ -128,30 +128,6 @@ public class HertlHendlBot extends AbilityBot
 		return CREATOR_ID;
 	}
 
-	private void sendPhotoFromUpload(final String filePath, final Long chatId)
-	{
-		final SendPhoto sendPhotoRequest = new SendPhoto(); // 1
-		sendPhotoRequest.setChatId(Long.toString(chatId)); // 2
-		try
-		{
-			sendPhotoRequest.setPhoto(new InputFile(IOHelper.findResource(filePath), filePath));
-		} catch (final FileNotFoundException e1)
-		{
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (final IOException e1)
-		{
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} // 3
-		try
-		{
-			this.execute(sendPhotoRequest); // 4
-		} catch (final TelegramApiException e)
-		{
-			e.printStackTrace();
-		}
-	}
 
 	public Ability showHelp()
 	{
@@ -310,23 +286,32 @@ public class HertlHendlBot extends AbilityBot
 		final File fileToDelete = new File(fileName);
 		fileToDelete.delete();
 	}
+	
 
+	private void sendPhotoFromUpload(final String filePath, final Long chatId)
+	{
+		final SendPhoto sendPhotoRequest = new SendPhoto(); // 1
+		sendPhotoRequest.setChatId(Long.toString(chatId)); // 2
+		try
+		{
+			sendPhotoRequest.setPhoto(new InputFile(IOHelper.findResource(filePath), filePath));
+		} catch (final Exception e1)
+		{
+			LOG.error("Fehler beim schicken des Photos:{}",e1);
+		} 
+	}
+
+	/**
+	 * Make an Screenshot of the Hmepage with docker.
+	 * Works only on Linux
+	 * @return Fullqualified Filename to load from Hdd.
+	 */
 	private String makingScreenshotOfHertlHomepage()
 	{
 		final ProcessBuilder processBuilder = new ProcessBuilder();
 
 		final String hertlTimeStampFileName = "hertl_standorteFoto"
 				+ LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd__HH-mm-ss-SSS")) + ".png";
-		// Run a shell script
-		// processBuilder.command("path/to/hello.sh");
-
-		// -- Windows --
-
-		// Run a command
-		// processBuilder.command("cmd.exe", "/c", "dir C:\\Users\\mkyong");
-
-		// Run a bat file
-		// processBuilder.command("C:\\Users\\mkyong\\hello.bat");
 
 		try
 		{
