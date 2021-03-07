@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.telegram.abilitybots.api.objects.MessageContext;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 
 import de.bigamgamen.java.telegrambots.hertlhendl.HertlHendlBot;
@@ -39,6 +40,10 @@ public class TelegramKeyBoardBuilder {
 		hertlBotDao.root().artikels().all().forEach(
 				artikel -> addButtonToKeyBoard(keyboard, createAddPositiontoOrderLink(artikel, bestellungId)));
 
+		KeyboardRow row = new KeyboardRow();
+		row.add(new KeyboardButton(createKeyForAbility(HertlHendlBot.ABILITY_NAME_CLOSE_ORDER+" "+bestellungId)));
+		keyboard.add(row);
+		
 		return keyboard;
 	}
 

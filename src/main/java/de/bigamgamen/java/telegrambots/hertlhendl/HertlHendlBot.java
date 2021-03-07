@@ -83,6 +83,10 @@ public class HertlHendlBot extends AbilityBot
 	public static final String ABILITY_NAME_NEW_ORDER = "neuebestellung";
 	public static final String ABILITY_NAME_MY_OPEN_ORDERS = "meineoffnenebestellungen";
 	public static final String ABILITY_NAME_ADMIN_OPEN_ORDERS = "adminoffnenebestellungen";
+	public static final String ABILITY_NAME_CLOSE_ORDER = "closeorder";
+
+	private static final String MESSAGE_CLOSE_ALREADY_SUCCESSFULL = "Die Bestellung wurde erfolgreich abgeschlossen.";
+	private static final String MESSAGE_CLOSE_ALREADY_CLOSED = "Die Bestellung ist bereits abgeschlossen.";
 
 	private static final String HENDL_PREISE_JPG = "hendl_preise.jpg";
 	private final static Logger LOG = LoggerFactory.getLogger(HertlHendlBot.class);
@@ -138,7 +142,8 @@ public class HertlHendlBot extends AbilityBot
 					{
 						final SendMessage message = new SendMessage();
 						message.setChatId(Long.toString(context.chatId()));
-						message.setText(keyBoardBuilder.createAbilityListForHelp(roleController.getAbilitiesForUser(context.user())));
+						message.setText(keyBoardBuilder
+								.createAbilityListForHelp(roleController.getAbilitiesForUser(context.user())));
 						this.silent.execute(message);
 					}
 				}).build();
@@ -285,6 +290,38 @@ public class HertlHendlBot extends AbilityBot
 						// activate the keyboard
 						keyboardMarkup.setKeyboard(keyboard);
 						message.setReplyMarkup(keyboardMarkup);
+
+						this.silent.execute(message);
+					}
+				}).build();
+	}
+
+	public Ability closeOrder()
+	{
+
+		return Ability.builder().name(ABILITY_NAME_CLOSE_ORDER).info("Schließt die Bestellung ab.").locality(ALL)
+				.privacy(PUBLIC)
+				.input(1)
+				.action(context ->
+				{
+					if (roleController.canUseAbility(context.user(), ABILITY_NAME_CLOSE_ORDER))
+					{
+						final int bestellId = Integer.parseInt(context.firstArg());
+						final Long chatId = context.chatId();
+						final HertlBotOrder bestellung = hertlBotDao.loadBestellung(chatId, bestellId);
+						final SendMessage message = new SendMessage();
+						message.setChatId(Long.toString(context.chatId()));
+
+						if (bestellung.isClosed())
+						{
+
+							message.setText(MESSAGE_CLOSE_ALREADY_CLOSED);
+						} else
+						{
+							bestellung.setClosed(true);
+							HertlBotRootDao.storageManager().store(bestellung);
+							message.setText(MESSAGE_CLOSE_ALREADY_SUCCESSFULL);
+						}
 
 						this.silent.execute(message);
 					}

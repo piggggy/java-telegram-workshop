@@ -10,12 +10,14 @@ import one.microstream.persistence.types.Persister;
 
 public class HertlBotOrder {
 	
+	private static final String BESTELLUNG_CLOSED = "GESCHLOSSEN";
 	private static final String BESTELLUNG_TITLE = "Ihre Bestellung:";
 	private static final String DD_MM_YYYY = "dd-MM-yyyy";
 	private int index;
 	private LocalDate bestellDatum;
 	private HertlBotUser user;
 	private List<HertlBotPosition> positionen;
+	private Boolean closed = false;
 	
 	public HertlBotOrder() {
 		
@@ -42,7 +44,7 @@ public class HertlBotOrder {
 	@Override
 	public String toString() {
 		final StringBuilder sb = new StringBuilder(BESTELLUNG_TITLE + " " +this.index);
-		sb.append(" Vom: "+this.getBestellDatumFormated()+System.lineSeparator());
+		sb.append(" Vom: "+this.getBestellDatumFormated()+ "." + (isClosed() ? BESTELLUNG_CLOSED:"")+System.lineSeparator());
 		this.positionen.forEach(pos -> sb.append(pos.toString()+System.lineSeparator()));
 		sb.append("Summe: "+ this.getSumme());
 		return sb.toString();
@@ -89,6 +91,16 @@ public class HertlBotOrder {
 
 	public void setIndex(final int index) {
 		this.index = index;
+	}
+
+	public Boolean isClosed()
+	{
+		return closed;
+	}
+
+	public void setClosed(Boolean closed)
+	{
+		this.closed = closed;
 	}
 	
 	
