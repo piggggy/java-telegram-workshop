@@ -1,8 +1,13 @@
 package de.bigamgamen.java.telegrambots.hertlhendl.dal;
 
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotOrder;
 import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotRoot;
@@ -11,15 +16,29 @@ import one.microstream.storage.configuration.Configuration;
 import one.microstream.storage.types.EmbeddedStorageFoundation;
 import one.microstream.storage.types.EmbeddedStorageManager;
 
-public class HertlBotRootDao {
+public class HertlBotRootDao
+{
 
 	private final static EmbeddedStorageManager storageManager = createStorageManager();
 
-	public HertlBotRootDao() {
+	private Predicate<HertlBotOrder> openOrderUntilToday = new Predicate<HertlBotOrder>()
+	{
+		@Override
+		public boolean test(HertlBotOrder t)
+		{
+			LocalDate now = LocalDate.now();
+			LocalDate orderDate = t.getBestellDatum();
+			return (orderDate.isBefore(now) || orderDate.equals(now)) && !t.isClosed() && t.isCommited();
+		}
+	};
+
+	public HertlBotRootDao()
+	{
 
 	}
 
-	private static EmbeddedStorageManager createStorageManager() {
+	private static EmbeddedStorageManager createStorageManager()
+	{
 		final Configuration configuration = Configuration.Default();
 		configuration.setBaseDirectory(Paths.get("data", "storage").toString());
 		configuration.setChannelCount(2);
@@ -28,7 +47,8 @@ public class HertlBotRootDao {
 
 		final EmbeddedStorageManager storageManager = foundation.createEmbeddedStorageManager().start();
 
-		if (storageManager.root() == null) {
+		if (storageManager.root() == null)
+		{
 			final HertlBotRoot root = new HertlBotRoot();
 			storageManager.setRoot(root);
 			storageManager.storeRoot();
@@ -37,26 +57,31 @@ public class HertlBotRootDao {
 		return storageManager;
 	}
 
-	public static EmbeddedStorageManager storageManager() {
+	public static EmbeddedStorageManager storageManager()
+	{
 		return storageManager;
 	}
 
-	public HertlBotRoot root() {
+	public HertlBotRoot root()
+	{
 		return (HertlBotRoot) storageManager().root();
 	}
 
-	public HertlBotOrder loadBestellung(Long chatId, int bestellId) {
+	public HertlBotOrder loadBestellung(Long chatId, int bestellId)
+	{
 		HertlBotUser user = loadUser(chatId);
 
 		return user.getBestellungen().stream().filter(bestellung -> bestellung.getIndex() == bestellId).findFirst()
 				.get();
 	}
 
-	public HertlBotUser loadUser(Long chatId) {
+	public HertlBotUser loadUser(Long chatId)
+	{
 
 		Optional<HertlBotUser> userOpt = root().users().ofId(chatId);
 
-		if (userOpt.isPresent()) {
+		if (userOpt.isPresent())
+		{
 			return userOpt.get();
 		}
 
@@ -65,7 +90,8 @@ public class HertlBotRootDao {
 		return user;
 	}
 
-	public HertlBotOrder createNewBestellungForUser(Long chatId) {
+	public HertlBotOrder createNewBestellungForUser(Long chatId)
+	{
 		HertlBotUser user = this.loadUser(chatId);
 		HertlBotOrder bestellung = new HertlBotOrder(user, new ArrayList<>());
 		user.addBestellung(bestellung, storageManager);
@@ -73,7 +99,16 @@ public class HertlBotRootDao {
 		return bestellung;
 	}
 
-	public void shutDown() {
+	public List<HertlBotOrder> loadOpenOrdersForToday()
+	{
+		List<HertlBotOrder> orders = new ArrayList<>();
+		root().users().all().forEach(user -> orders
+				.addAll(user.getBestellungen().stream().filter(openOrderUntilToday).collect(Collectors.toList())));
+		return orders;
+	}
+
+	public void shutDown()
+	{
 
 		storageManager.shutdown();
 	}

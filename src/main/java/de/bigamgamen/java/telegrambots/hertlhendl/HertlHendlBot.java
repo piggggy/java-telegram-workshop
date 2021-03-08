@@ -84,9 +84,12 @@ public class HertlHendlBot extends AbilityBot
 	public static final String ABILITY_NAME_MY_OPEN_ORDERS = "meineoffnenebestellungen";
 	public static final String ABILITY_NAME_ADMIN_OPEN_ORDERS = "adminoffnenebestellungen";
 	public static final String ABILITY_NAME_CLOSE_ORDER = "closeorder";
+	public static final String ABILITY_NAME_COMMIT_ORDER = "commitorder";
 
 	private static final String MESSAGE_CLOSE_ALREADY_SUCCESSFULL = "Die Bestellung wurde erfolgreich abgeschlossen.";
 	private static final String MESSAGE_CLOSE_ALREADY_CLOSED = "Die Bestellung ist bereits abgeschlossen.";
+	private static final String MESSAGE_ALREADY_COMMITED = "Die Bestellung wurde bereits bestätigt";
+	private static final String MESSAGE_COMMIT_SUCCESSFULL = "Die Bestellung wurde erfolgreich bestätigt";
 
 	private static final String HENDL_PREISE_JPG = "hendl_preise.jpg";
 	private final static Logger LOG = LoggerFactory.getLogger(HertlHendlBot.class);
@@ -213,6 +216,24 @@ public class HertlHendlBot extends AbilityBot
 					}
 				}).build();
 	}
+	
+	public Ability showAdminOpenOrders()
+	{
+
+		return Ability.builder().name(ABILITY_NAME_ADMIN_OPEN_ORDERS).info("Zeigt die offenen Bestellungen").locality(ALL)
+				.privacy(PUBLIC).action(context ->
+				{
+					if (roleController.canUseAbility(context.user(), ABILITY_NAME_ADMIN_OPEN_ORDERS))
+					{
+						final SendMessage message = new SendMessage();
+						message.setChatId(Long.toString(context.chatId()));
+						message.setText(this.loadAndShowMyOrder(context.chatId()));
+						final ReplyKeyboardMarkup keyboardMarkup = keyBoardBuilder.buildOrderMarkup(context);
+						message.setReplyMarkup(keyboardMarkup);
+						this.silent.execute(message);
+					}
+				}).build();
+	}
 
 	public Ability showMyOrderKeyBoard()
 	{
@@ -321,6 +342,38 @@ public class HertlHendlBot extends AbilityBot
 							bestellung.setClosed(true);
 							HertlBotRootDao.storageManager().store(bestellung);
 							message.setText(MESSAGE_CLOSE_ALREADY_SUCCESSFULL);
+						}
+
+						this.silent.execute(message);
+					}
+				}).build();
+	}
+	
+	public Ability commitOrder()
+	{
+
+		return Ability.builder().name(ABILITY_NAME_COMMIT_ORDER).info("Bestätigt die Bestellung.").locality(ALL)
+				.privacy(PUBLIC)
+				.input(1)
+				.action(context ->
+				{
+					if (roleController.canUseAbility(context.user(), ABILITY_NAME_COMMIT_ORDER))
+					{
+						final int bestellId = Integer.parseInt(context.firstArg());
+						final Long chatId = context.chatId();
+						final HertlBotOrder bestellung = hertlBotDao.loadBestellung(chatId, bestellId);
+						final SendMessage message = new SendMessage();
+						message.setChatId(Long.toString(context.chatId()));
+
+						if (bestellung.isCommited())
+						{
+
+							message.setText(MESSAGE_ALREADY_COMMITED);
+						} else
+						{
+							bestellung.setCommited(true);
+							HertlBotRootDao.storageManager().store(bestellung);
+							message.setText(MESSAGE_COMMIT_SUCCESSFULL);
 						}
 
 						this.silent.execute(message);

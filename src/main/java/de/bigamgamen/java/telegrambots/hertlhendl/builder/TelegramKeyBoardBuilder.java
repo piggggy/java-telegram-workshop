@@ -41,7 +41,7 @@ public class TelegramKeyBoardBuilder {
 				artikel -> addButtonToKeyBoard(keyboard, createAddPositiontoOrderLink(artikel, bestellungId)));
 
 		KeyboardRow row = new KeyboardRow();
-		row.add(new KeyboardButton(createKeyForAbility(HertlHendlBot.ABILITY_NAME_CLOSE_ORDER+" "+bestellungId)));
+		row.add(new KeyboardButton(createKeyForAbility(HertlHendlBot.ABILITY_NAME_COMMIT_ORDER+" "+bestellungId)));
 		keyboard.add(row);
 		
 		return keyboard;
