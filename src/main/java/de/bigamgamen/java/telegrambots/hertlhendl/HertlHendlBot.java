@@ -94,14 +94,14 @@ public class HertlHendlBot extends AbilityBot
 	private final static Logger LOG = LoggerFactory.getLogger(HertlHendlBot.class);
 	private final static String BOT_TOKEN = "";
 	private final static String BOT_USERNAME = "";
-	private final static Long ADMIN_ID = 0L;
-	private static Integer CREATOR_ID = 929115416;
+	private static Integer CREATOR_ID = 0;
 	private static String HERTL_URL = "https://hertel-haehnchen.de/standplatzsuche?search=92637";
 	private static HertlBotRootDao hertlBotDao;
 
 	private final TelegramKeyBoardBuilder keyBoardBuilder;
 	private final RightController rightController;
 	private RoleController roleController;
+	private final Integer creatorId;
 
 	public static void main(final String[] args)
 			throws ParserConfigurationException, SAXException, IOException, URISyntaxException, TelegramApiException
@@ -110,28 +110,29 @@ public class HertlHendlBot extends AbilityBot
 
 		final String token = args[0] != null ? args[0] : BOT_TOKEN;
 		final String username = args[1] != null ? args[1] : BOT_USERNAME;
-		final Long adminId = args[2] != null ? Long.parseLong(args[2]) : ADMIN_ID;
-		final HertlHendlBot bot = new HertlHendlBot(token, username, adminId);
+		final Integer creatorId = args[2] != null ? Integer.valueOf(args[2]) : CREATOR_ID;
+		final HertlHendlBot bot = new HertlHendlBot(token, username, creatorId);
 		TelegramBotsApi api = new TelegramBotsApi(DefaultBotSession.class);
 		api.registerBot(bot);
 		LOG.info("HertlHendlBot successfull started");
 	}
 
-	public HertlHendlBot(final String botToken, final String botUsername, final Long adminId)
+	public HertlHendlBot(final String botToken, final String botUsername, Integer creatorId)
 			throws ParserConfigurationException, SAXException, IOException, URISyntaxException
 	{
 		super(botToken, botUsername);
 		hertlBotDao = new HertlBotRootDao();
 		InitArticles.initArtikels(hertlBotDao);
 		this.keyBoardBuilder = new TelegramKeyBoardBuilder(hertlBotDao);
-		this.rightController = new HertlRightController(adminId);
+		this.rightController = new HertlRightController(creatorId);
 		this.roleController = new HertlRoleController(rightController);
+		this.creatorId = creatorId;
 	}
 
 	@Override
 	public int creatorId()
 	{
-		return CREATOR_ID;
+		return this.creatorId;
 	}
 
 	public Ability showHelp()

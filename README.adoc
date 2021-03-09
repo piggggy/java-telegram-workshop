@@ -1,6 +1,16 @@
 = Telegram ChatBot For Order things in Small Groups
 ifdef::env-github[:outfilesuffix: .adoc]
 
+How to use:
+Create your Ownbot :
+https://github.com/chatbot-workshop/java-telegram-workshop/blob/master/WORKSHOP.adoc
+
+Start the Bot like this.
+java -cp java.telegrambots-0.9-FINAL.jar:./lib/* de.bigamgamen.java.telegrambots.hertlhendl.HertlHendlBot TOKEN bot_name CREATOR_ID
+
+Or test it with this bot:
+@herthaehnchen_bot
+
 
 == Copyright and Licensing
 

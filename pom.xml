@@ -7,7 +7,7 @@
 
 	<groupId>de.bigamgamen</groupId>
 	<artifactId>java.telegrambots</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>0.9-FINAL</version>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
