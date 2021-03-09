@@ -23,7 +23,6 @@ import static org.telegram.abilitybots.api.objects.Privacy.PUBLIC;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.math.BigInteger;
@@ -31,7 +30,6 @@ import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -42,7 +40,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.telegram.abilitybots.api.bot.AbilityBot;
 import org.telegram.abilitybots.api.objects.Ability;
-import org.telegram.abilitybots.api.objects.MessageContext;
 import org.telegram.abilitybots.api.sender.MessageSender;
 import org.telegram.abilitybots.api.sender.SilentSender;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
@@ -67,6 +64,8 @@ import de.bigamgamen.java.telegrambots.hertlhendl.dal.HertlBotRootDao;
 import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotArticle;
 import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotOrder;
 import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotPosition;
+import de.bigamgamen.java.telegrambots.hertlhendl.helper.OrderHelper;
+import de.bigamgamen.java.telegrambots.hertlhendl.helper.TelegramHelper;
 import de.bigamgamen.java.telegrambots.hertlhendl.init.InitArticles;
 
 public class HertlHendlBot extends AbilityBot
@@ -162,7 +161,7 @@ public class HertlHendlBot extends AbilityBot
 					{
 						final int bestellId = Integer.parseInt(context.firstArg());
 						final Long chatId = context.chatId();
-						final HertlBotOrder bestellung = hertlBotDao.loadBestellung(chatId, bestellId);
+						final HertlBotOrder bestellung = hertlBotDao.loadBestellung(chatId, TelegramHelper.getTotalUserName(context.user()), bestellId);
 						final SendMessage message = new SendMessage();
 						message.setChatId(Long.toString(context.chatId()));
 						final String messageText = bestellung.toString() + System.lineSeparator()
@@ -209,7 +208,7 @@ public class HertlHendlBot extends AbilityBot
 					{
 						final SendMessage message = new SendMessage();
 						message.setChatId(Long.toString(context.chatId()));
-						message.setText(this.loadAndShowMyOrder(context.chatId()));
+						message.setText(this.loadAndShowMyOrder(context.chatId(), TelegramHelper.getTotalUserName(context.user())));
 						final ReplyKeyboardMarkup keyboardMarkup = keyBoardBuilder.buildOrderMarkup(context);
 						message.setReplyMarkup(keyboardMarkup);
 						this.silent.execute(message);
@@ -227,7 +226,7 @@ public class HertlHendlBot extends AbilityBot
 					{
 						final SendMessage message = new SendMessage();
 						message.setChatId(Long.toString(context.chatId()));
-						message.setText(this.loadAndShowMyOrder(context.chatId()));
+						message.setText(this.loadAndShowMyOrder(context.chatId(), TelegramHelper.getTotalUserName(context.user())));
 						final ReplyKeyboardMarkup keyboardMarkup = keyBoardBuilder.buildOrderMarkup(context);
 						message.setReplyMarkup(keyboardMarkup);
 						this.silent.execute(message);
@@ -265,7 +264,7 @@ public class HertlHendlBot extends AbilityBot
 					{
 						final SendMessage message = new SendMessage();
 						message.setChatId(Long.toString(context.chatId()));
-						message.setText(keyBoardBuilder.createAndShowNewOrder(context.chatId()));
+						message.setText(keyBoardBuilder.createAndShowNewOrder(context.chatId(), TelegramHelper.getTotalUserName(context.user())));
 						this.silent.execute(message);
 					}
 				}).build();
@@ -281,7 +280,7 @@ public class HertlHendlBot extends AbilityBot
 					{
 						final SendMessage message = new SendMessage();
 						message.setChatId(Long.toString(context.chatId()));
-						message.setText(this.createPositionForOrder(context.firstArg(), context.chatId(),
+						message.setText(this.createPositionForOrder(context.firstArg(), context.chatId(), TelegramHelper.getTotalUserName(context.user()),
 								Integer.valueOf(context.secondArg())));
 						this.silent.execute(message);
 					}
@@ -329,7 +328,7 @@ public class HertlHendlBot extends AbilityBot
 					{
 						final int bestellId = Integer.parseInt(context.firstArg());
 						final Long chatId = context.chatId();
-						final HertlBotOrder bestellung = hertlBotDao.loadBestellung(chatId, bestellId);
+						final HertlBotOrder bestellung = hertlBotDao.loadBestellung(chatId, TelegramHelper.getTotalUserName(context.user()), bestellId);
 						final SendMessage message = new SendMessage();
 						message.setChatId(Long.toString(context.chatId()));
 
@@ -361,7 +360,7 @@ public class HertlHendlBot extends AbilityBot
 					{
 						final int bestellId = Integer.parseInt(context.firstArg());
 						final Long chatId = context.chatId();
-						final HertlBotOrder bestellung = hertlBotDao.loadBestellung(chatId, bestellId);
+						final HertlBotOrder bestellung = hertlBotDao.loadBestellung(chatId, TelegramHelper.getTotalUserName(context.user()), bestellId);
 						final SendMessage message = new SendMessage();
 						message.setChatId(Long.toString(context.chatId()));
 
@@ -496,46 +495,31 @@ public class HertlHendlBot extends AbilityBot
 		this.silent = silent;
 	}
 
-	private String createPositionForOrder(final String artikelName, final Long chatId,
+	private String createPositionForOrder(final String artikelName, final Long chatId, String userName,
 			final Integer bestellungId)
 	{
 		final HertlBotArticle artikel = hertlBotDao.root().artikels().ofName(artikelName);
-		final HertlBotOrder bestellung = hertlBotDao.loadBestellung(chatId, bestellungId);
-		final Predicate<HertlBotPosition> positionAlreadyExist = position -> position.getArtikel().getName()
-				.equals(artikel.getName());
+		final HertlBotOrder bestellung = hertlBotDao.loadBestellung(chatId, userName, bestellungId);
+		OrderHelper.addArticleToOrder(artikel,BigInteger.valueOf(1L), bestellung);
 
-		HertlBotPosition position;
-
-		final Optional<HertlBotPosition> positionOpt = bestellung.getPositionen().stream().filter(positionAlreadyExist)
-				.findFirst();
-		if (positionOpt.isPresent())
-		{
-			position = positionOpt.get();
-			position.setMenge(position.getMenge().add(BigInteger.valueOf(1L)));
-			HertlBotRootDao.storageManager().store(position);
-		} else
-		{
-			position = new HertlBotPosition();
-			position.setArtikel(artikel);
-			bestellung.addPosition(position, HertlBotRootDao.storageManager());
-		}
-
-		return this.loadAndShowOrder(chatId, bestellungId);
+		return this.loadAndShowOrder(chatId,userName, bestellungId);
 
 	}
 
-	private String loadAndShowOrder(final Long chatId, final int bestellId)
+	
+
+	private String loadAndShowOrder(final Long chatId, String userName, final int bestellId)
 	{
-		final HertlBotOrder bestellung = hertlBotDao.loadBestellung(chatId, bestellId);
+		final HertlBotOrder bestellung = hertlBotDao.loadBestellung(chatId, userName, bestellId);
 		return bestellung.toString();
 	}
 
-	public String loadAndShowMyOrder(final Long chatId)
+	public String loadAndShowMyOrder(final Long chatId ,String userName)
 	{
 		final StringBuilder sb = new StringBuilder(
 				"Ihre Bestellungen:" + System.lineSeparator() + System.lineSeparator());
-		HertlHendlBot.hertlBotDao.loadUser(chatId).getBestellungen()
-				.forEach(bestellung -> sb.append(loadAndShowOrder(chatId, bestellung.getIndex()))
+		HertlHendlBot.hertlBotDao.loadUser(chatId, userName).getBestellungen()
+				.forEach(bestellung -> sb.append(loadAndShowOrder(chatId, userName, bestellung.getIndex()))
 						.append(System.lineSeparator() + System.lineSeparator()));
 		return sb.toString();
 	}

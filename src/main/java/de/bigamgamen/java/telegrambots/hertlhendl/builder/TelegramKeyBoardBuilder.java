@@ -12,6 +12,7 @@ import de.bigamgamen.java.telegrambots.hertlhendl.HertlHendlBot;
 import de.bigamgamen.java.telegrambots.hertlhendl.dal.HertlBotRootDao;
 import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotArticle;
 import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotOrder;
+import de.bigamgamen.java.telegrambots.hertlhendl.helper.TelegramHelper;
 
 public class TelegramKeyBoardBuilder {
 
@@ -25,10 +26,10 @@ public class TelegramKeyBoardBuilder {
 		this.hertlBotDao = hertlBotDao;
 	}
 
-	public List<KeyboardRow> loadAndShowMyOrdersAsKeyBoard(final Long chatId) {
+	public List<KeyboardRow> loadAndShowMyOrdersAsKeyBoard(final Long chatId, String userName) {
 		final List<KeyboardRow> keyboard = new ArrayList<>();
 
-		hertlBotDao.loadUser(chatId).getBestellungen()
+		hertlBotDao.loadUser(chatId,userName).getBestellungen()
 				.forEach(bestellung -> addButtonToKeyBoard(keyboard, this.createOrderLink(bestellung)));
 
 		return keyboard;
@@ -65,9 +66,9 @@ public class TelegramKeyBoardBuilder {
 
 	}
 
-	public String createAndShowNewOrder(final Long chatId) {
+	public String createAndShowNewOrder(final Long chatId, String userName) {
 
-		final HertlBotOrder bestellung = hertlBotDao.createNewBestellungForUser(chatId);
+		final HertlBotOrder bestellung = hertlBotDao.createNewBestellungForUser(chatId, userName);
 
 		return this.createOrderLink(bestellung);
 	}
@@ -98,7 +99,7 @@ public class TelegramKeyBoardBuilder {
 	
 	public ReplyKeyboardMarkup buildOrderMarkup(MessageContext context) {
 		final ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
-		final List<KeyboardRow> keyboard = this.loadAndShowMyOrdersAsKeyBoard(context.chatId());
+		final List<KeyboardRow> keyboard = this.loadAndShowMyOrdersAsKeyBoard(context.chatId(), TelegramHelper.getTotalUserName(context.user()));
 		
 		// activate the keyboard
 		keyboardMarkup.setKeyboard(keyboard);

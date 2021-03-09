@@ -6,7 +6,6 @@ import java.util.List;
 
 import de.bigamgamen.java.telegrambots.hertlhendl.dal.HertlBotRootDao;
 import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotArticle;
-import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotUser;
 
 public class InitArticles
 {

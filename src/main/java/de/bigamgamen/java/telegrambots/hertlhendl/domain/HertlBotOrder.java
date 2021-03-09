@@ -45,7 +45,7 @@ public class HertlBotOrder {
 	@Override
 	public String toString() {
 		final StringBuilder sb = new StringBuilder(BESTELLUNG_TITLE + " " +this.index);
-		sb.append(" Vom: "+this.getBestellDatumFormated()+ "." + (isCommited() ? BESTELLUNG_COMMITED:"")+System.lineSeparator());
+		sb.append(" Für: " + this.getUser().getUserName()).append(" Vom: " + this.getBestellDatumFormated() + "." + (isCommited() ? BESTELLUNG_COMMITED:"") + System.lineSeparator());
 		this.positionen.forEach(pos -> sb.append(pos.toString()+System.lineSeparator()));
 		sb.append("Summe: "+ this.getSumme());
 		return sb.toString();
@@ -58,11 +58,6 @@ public class HertlBotOrder {
 			summe = summe.add(pos.getPositionPrice());
 		}
 		return Pricehelper.getPriceAsEuroString(summe);
-	}
-	
-	private void sumToBigInteger(BigInteger addingTo, final BigInteger addition)
-	{
-		addingTo = addingTo.add(addition);
 	}
 
 	public HertlBotUser getUser() {
