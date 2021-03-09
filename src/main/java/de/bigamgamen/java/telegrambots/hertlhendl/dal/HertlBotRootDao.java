@@ -20,16 +20,13 @@ public class HertlBotRootDao
 
 	private final static EmbeddedStorageManager storageManager = createStorageManager();
 
-	private Predicate<HertlBotOrder> openOrderUntilToday = new Predicate<HertlBotOrder>()
-	{
-		@Override
-		public boolean test(HertlBotOrder t)
+	private Predicate<HertlBotOrder> openOrderUntilToday = order ->
 		{
 			LocalDate now = LocalDate.now();
-			LocalDate orderDate = t.getBestellDatum();
-			return (orderDate.isBefore(now) || orderDate.equals(now)) && !t.isClosed() && t.isCommited();
-		}
-	};
+			LocalDate orderDate = order.getBestellDatum();
+			return (orderDate.isBefore(now) || orderDate.equals(now)) && !order.isClosed() && order.isCommited();
+		};
+	
 
 	public HertlBotRootDao()
 	{

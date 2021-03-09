@@ -226,7 +226,7 @@ public class HertlHendlBot extends AbilityBot
 					{
 						final SendMessage message = new SendMessage();
 						message.setChatId(Long.toString(context.chatId()));
-						message.setText(this.loadAndShowMyOrder(context.chatId(), TelegramHelper.getTotalUserName(context.user())));
+						message.setText(OrderHelper.getTotalOrder(hertlBotDao.loadOpenOrdersForToday()).toString());
 						final ReplyKeyboardMarkup keyboardMarkup = keyBoardBuilder.buildOrderMarkup(context);
 						message.setReplyMarkup(keyboardMarkup);
 						this.silent.execute(message);

@@ -3,6 +3,7 @@ package de.bigamgamen.java.telegrambots.hertlhendl.domain;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 import de.bigamgamen.java.helper.Pricehelper;
@@ -16,7 +17,7 @@ public class HertlBotOrder {
 	private int index;
 	private LocalDate bestellDatum;
 	private HertlBotUser user;
-	private List<HertlBotPosition> positionen;
+	private List<HertlBotPosition> positionen = new ArrayList<>();
 	private Boolean commited = false;
 	private Boolean closed = false;
 	

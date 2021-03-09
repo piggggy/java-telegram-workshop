@@ -1,6 +1,7 @@
 package de.bigamgamen.java.telegrambots.hertlhendl.helper;
 
 import java.math.BigInteger;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -24,6 +25,7 @@ public class OrderHelper
 		HertlBotUser totalUser = new HertlBotUser(1L,"Gesamtbestellung");
 		
 		totalOrder.setUser(totalUser);
+		totalOrder.setBestellDatum(LocalDate.now());
 		orderList.forEach(order -> order.getPositionen().forEach(position -> addArticleToOrder(position.getArtikel(), position.getMenge(), totalOrder)));
 		
 		return totalOrder;
