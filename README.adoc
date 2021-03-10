@@ -1,15 +1,48 @@
 = Telegram ChatBot For Order things in Small Groups
 ifdef::env-github[:outfilesuffix: .adoc]
 
-How to use:
+Developer how to use:
+
 Create your Ownbot :
-https://github.com/chatbot-workshop/java-telegram-workshop/blob/master/WORKSHOP.adoc
+	https://github.com/chatbot-workshop/java-telegram-workshop/blob/master/WORKSHOP.adoc
 
 Start the Bot like this.
-java -cp java.telegrambots-0.9-FINAL.jar:./lib/* de.bigamgamen.java.telegrambots.hertlhendl.HertlHendlBot TOKEN bot_name CREATOR_ID
+
+	java -cp java.telegrambots-0.9-FINAL.jar:./lib/* de.bigamgamen.java.telegrambots.hertlhendl.HertlHendlBot TOKEN bot_name CREATOR_ID
 
 Or test it with this bot:
-@herthaehnchen_bot
+	@herthaehnchen_bot
+	
+	
+User how to use:
+
+type 
+	/help
+and choose an command.
+
+Usecase: Make an order:
+
+	/neuebestellung
+	/bestellungenkeyboard
+	
+choose a Button
+
+	/bestellung 0
+	
+add article to order with Buttons
+
+	/addposition 1/2-Hähnchen 0
+	/addposition Krautsalat 0
+	
+Commit your order
+
+	/commitorder 0
+
+
+Admin how to use:
+
+	/adminoffnenebestellungen
+
 
 
 == Copyright and Licensing

@@ -72,7 +72,7 @@ public class HertlHendlBot extends AbilityBot
 	public static final String ABILITY_NAME_LOCATION_PHOTO = "standortefoto";
 	public static final String ABILITY_NAME_PRICES_PHOTO = "preisefoto";
 	public static final String ABILITY_NAME_ORDER = "bestellung";
-	public static final String ABILITY_NAME_ITEM = "artikel";
+	public static final String ABILITY_NAME_ITEM_LIST = "artikel";
 	public static final String ABILITY_NAME_ADD_POSITION = "addposition";
 	public static final String ABILITY_NAME_LIST_MY_ORDERS = "bestellungenauflistung";
 	public static final String ABILITY_NAME_MY_ORDERS_AS_KEYBOARD = "bestellungenkeyboard";
@@ -183,10 +183,10 @@ public class HertlHendlBot extends AbilityBot
 	public Ability showArticle()
 	{
 
-		return Ability.builder().name(ABILITY_NAME_ITEM).info("Listet alle Artikel auf").locality(ALL).privacy(PUBLIC)
+		return Ability.builder().name(ABILITY_NAME_ITEM_LIST).info("Listet alle Artikel auf").locality(ALL).privacy(PUBLIC)
 				.action(context ->
 				{
-					if (roleController.canUseAbility(context.user(), ABILITY_NAME_ITEM))
+					if (roleController.canUseAbility(context.user(), ABILITY_NAME_ITEM_LIST))
 					{
 						final SendMessage message = new SendMessage();
 						message.setChatId(Long.toString(context.chatId()));

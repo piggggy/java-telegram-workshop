@@ -12,15 +12,31 @@ import de.bigamgamen.java.telegrambots.hertlhendl.api.RoleController;
 public class HertlRoleController implements RoleController
 {
 
-	private static List<String> ADMIN_SET = Arrays.asList(HertlHendlBot.ABILITY_NAME_HELP,HertlHendlBot.ABILITY_NAME_LOCATION_PHOTO,
-			HertlHendlBot.ABILITY_NAME_PRICES_PHOTO, HertlHendlBot.ABILITY_NAME_ITEM,
-			HertlHendlBot.ABILITY_NAME_LIST_MY_ORDERS, HertlHendlBot.ABILITY_NAME_MY_ORDERS_AS_KEYBOARD,
-			HertlHendlBot.ABILITY_NAME_NEW_ORDER, HertlHendlBot.ABILITY_NAME_MY_OPEN_ORDERS,
-			HertlHendlBot.ABILITY_NAME_ADMIN_OPEN_ORDERS,HertlHendlBot.ABILITY_NAME_COMMIT_ORDER);
-	private static List<String> USER_SET = Arrays.asList(HertlHendlBot.ABILITY_NAME_HELP,HertlHendlBot.ABILITY_NAME_LOCATION_PHOTO,
-			HertlHendlBot.ABILITY_NAME_PRICES_PHOTO, HertlHendlBot.ABILITY_NAME_ITEM,
-			HertlHendlBot.ABILITY_NAME_LIST_MY_ORDERS, HertlHendlBot.ABILITY_NAME_MY_ORDERS_AS_KEYBOARD,
-			HertlHendlBot.ABILITY_NAME_NEW_ORDER, HertlHendlBot.ABILITY_NAME_MY_OPEN_ORDERS,HertlHendlBot.ABILITY_NAME_COMMIT_ORDER);
+	private static List<String> ADMIN_SET = Arrays.asList(
+			HertlHendlBot.ABILITY_NAME_HELP,
+			HertlHendlBot.ABILITY_NAME_LOCATION_PHOTO,
+			HertlHendlBot.ABILITY_NAME_PRICES_PHOTO, 
+			HertlHendlBot.ABILITY_NAME_ITEM_LIST,
+			HertlHendlBot.ABILITY_NAME_NEW_ORDER, 
+			HertlHendlBot.ABILITY_NAME_LIST_MY_ORDERS, 
+			HertlHendlBot.ABILITY_NAME_MY_ORDERS_AS_KEYBOARD,			
+			HertlHendlBot.ABILITY_NAME_MY_OPEN_ORDERS,
+			HertlHendlBot.ABILITY_NAME_ADMIN_OPEN_ORDERS,
+			HertlHendlBot.ABILITY_NAME_ADD_POSITION,
+			HertlHendlBot.ABILITY_NAME_ORDER,
+			HertlHendlBot.ABILITY_NAME_COMMIT_ORDER);
+	private static List<String> USER_SET = Arrays.asList(
+			HertlHendlBot.ABILITY_NAME_HELP,
+			HertlHendlBot.ABILITY_NAME_LOCATION_PHOTO,
+			HertlHendlBot.ABILITY_NAME_PRICES_PHOTO, 
+			HertlHendlBot.ABILITY_NAME_ITEM_LIST,
+			HertlHendlBot.ABILITY_NAME_NEW_ORDER, 
+			HertlHendlBot.ABILITY_NAME_LIST_MY_ORDERS, 
+			HertlHendlBot.ABILITY_NAME_MY_ORDERS_AS_KEYBOARD,			
+			HertlHendlBot.ABILITY_NAME_MY_OPEN_ORDERS,
+			HertlHendlBot.ABILITY_NAME_ADD_POSITION,
+			HertlHendlBot.ABILITY_NAME_ORDER,
+			HertlHendlBot.ABILITY_NAME_COMMIT_ORDER);
 
 	private RightController rigthController;
 
