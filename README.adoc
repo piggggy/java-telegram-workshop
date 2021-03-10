@@ -2,7 +2,9 @@
  
 ifdef::env-github[:outfilesuffix: .adoc]
 
-Developer how to use:
+== How to
+
+=== Developer how to use:
 
 Create your Ownbot :
 	https://github.com/chatbot-workshop/java-telegram-workshop/blob/master/WORKSHOP.adoc
@@ -14,8 +16,9 @@ Start the Bot like this.
 Or test it with this bot:
 	@herthaehnchen_bot
 	
+
 	
-User how to use:
+=== User how to use:
 
 type 
 	/help
@@ -40,7 +43,7 @@ Commit your order
 	/commitorder 0
 
 
-Admin how to use:
+=== Admin how to use:
 
 	/adminoffnenebestellungen
 
