@@ -31,8 +31,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.function.Predicate;
 
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -63,7 +61,6 @@ import de.bigamgamen.java.telegrambots.hertlhendl.controller.HertlRoleController
 import de.bigamgamen.java.telegrambots.hertlhendl.dal.HertlBotRootDao;
 import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotArticle;
 import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotOrder;
-import de.bigamgamen.java.telegrambots.hertlhendl.domain.HertlBotPosition;
 import de.bigamgamen.java.telegrambots.hertlhendl.helper.OrderHelper;
 import de.bigamgamen.java.telegrambots.hertlhendl.helper.TelegramHelper;
 import de.bigamgamen.java.telegrambots.hertlhendl.init.InitArticles;
@@ -158,7 +155,7 @@ public class HertlHendlBot extends AbilityBot
 		return Ability.builder().name(ABILITY_NAME_ORDER).info("zeigt eine bestimmte Bestellung").locality(ALL)
 				.privacy(PUBLIC).input(1).action(context ->
 				{
-					if (roleController.canUseAbility(context.user(), ABILITY_NAME_HELP))
+					if (roleController.canUseAbility(context.user(), ABILITY_NAME_ORDER))
 					{
 						final int bestellId = Integer.parseInt(context.firstArg());
 						final Long chatId = context.chatId();
@@ -189,7 +186,7 @@ public class HertlHendlBot extends AbilityBot
 		return Ability.builder().name(ABILITY_NAME_ITEM).info("Listet alle Artikel auf").locality(ALL).privacy(PUBLIC)
 				.action(context ->
 				{
-					if (roleController.canUseAbility(context.user(), ABILITY_NAME_HELP))
+					if (roleController.canUseAbility(context.user(), ABILITY_NAME_ITEM))
 					{
 						final SendMessage message = new SendMessage();
 						message.setChatId(Long.toString(context.chatId()));
@@ -205,7 +202,7 @@ public class HertlHendlBot extends AbilityBot
 		return Ability.builder().name(ABILITY_NAME_LIST_MY_ORDERS).info("Zeigt die eigenen Bestellungen").locality(ALL)
 				.privacy(PUBLIC).action(context ->
 				{
-					if (roleController.canUseAbility(context.user(), ABILITY_NAME_HELP))
+					if (roleController.canUseAbility(context.user(), ABILITY_NAME_LIST_MY_ORDERS))
 					{
 						final SendMessage message = new SendMessage();
 						message.setChatId(Long.toString(context.chatId()));
@@ -241,7 +238,7 @@ public class HertlHendlBot extends AbilityBot
 		return Ability.builder().name(ABILITY_NAME_MY_ORDERS_AS_KEYBOARD)
 				.info("Zeigt die eigenen Bestellungen als keyboard").locality(ALL).privacy(PUBLIC).action(context ->
 				{
-					if (roleController.canUseAbility(context.user(), ABILITY_NAME_HELP))
+					if (roleController.canUseAbility(context.user(), ABILITY_NAME_MY_ORDERS_AS_KEYBOARD))
 					{
 						final SendMessage message = new SendMessage();
 						message.setChatId(Long.toString(context.chatId()));
@@ -261,7 +258,7 @@ public class HertlHendlBot extends AbilityBot
 		return Ability.builder().name(ABILITY_NAME_NEW_ORDER).info("Erstellt eine neue Bestellung").locality(ALL)
 				.privacy(PUBLIC).action(context ->
 				{
-					if (roleController.canUseAbility(context.user(), ABILITY_NAME_HELP))
+					if (roleController.canUseAbility(context.user(), ABILITY_NAME_NEW_ORDER))
 					{
 						final SendMessage message = new SendMessage();
 						message.setChatId(Long.toString(context.chatId()));
@@ -277,7 +274,7 @@ public class HertlHendlBot extends AbilityBot
 		return Ability.builder().name(ABILITY_NAME_ADD_POSITION).info("Fügt eine Position zu einer Bestellung hinzu")
 				.locality(ALL).privacy(PUBLIC).input(2).action(context ->
 				{
-					if (roleController.canUseAbility(context.user(), ABILITY_NAME_HELP))
+					if (roleController.canUseAbility(context.user(), ABILITY_NAME_ADD_POSITION))
 					{
 						final SendMessage message = new SendMessage();
 						message.setChatId(Long.toString(context.chatId()));
@@ -386,7 +383,7 @@ public class HertlHendlBot extends AbilityBot
 		return Ability.builder().name(ABILITY_NAME_PRICES_PHOTO).info("send Preisfoto").locality(ALL).privacy(PUBLIC)
 				.action(context ->
 				{
-					if (roleController.canUseAbility(context.user(), ABILITY_NAME_HELP))
+					if (roleController.canUseAbility(context.user(), ABILITY_NAME_PRICES_PHOTO))
 					{
 						this.sendPhotoFromUpload(HENDL_PREISE_JPG, context.chatId());
 					}
@@ -398,7 +395,7 @@ public class HertlHendlBot extends AbilityBot
 		return Ability.builder().name(ABILITY_NAME_LOCATION_PHOTO).info("standorteFoto Weiden").locality(ALL)
 				.privacy(PUBLIC).action(context ->
 				{
-					if (roleController.canUseAbility(context.user(), ABILITY_NAME_HELP))
+					if (roleController.canUseAbility(context.user(), ABILITY_NAME_LOCATION_PHOTO))
 					{
 						this.makeScreenshotSenditDeleteit(context.chatId());
 					}
@@ -423,6 +420,15 @@ public class HertlHendlBot extends AbilityBot
 		} catch (final Exception e1)
 		{
 			LOG.error("Fehler beim schicken des Photos:{}", e1);
+		}
+		
+		try
+		{
+			this.execute(sendPhotoRequest); // 4
+		}
+		catch(final TelegramApiException e)
+		{
+			e.printStackTrace();
 		}
 	}
 
