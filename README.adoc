@@ -1,5 +1,5 @@
-= Telegram ChatBot For Order things in Small Groups
-= With a Microstream storing solution
+= Telegram ChatBot For Order things in Small Groups, with a Microstream storing solution
+ 
 ifdef::env-github[:outfilesuffix: .adoc]
 
 Developer how to use:
