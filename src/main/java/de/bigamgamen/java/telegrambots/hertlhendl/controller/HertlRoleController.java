@@ -22,6 +22,7 @@ public class HertlRoleController implements RoleController
 			HertlHendlBot.ABILITY_NAME_MY_ORDERS_AS_KEYBOARD,			
 			HertlHendlBot.ABILITY_NAME_MY_OPEN_ORDERS,
 			HertlHendlBot.ABILITY_NAME_ADMIN_OPEN_ORDERS,
+			HertlHendlBot.ABILITY_NAME_ADMIN_CLOSE_ORDERS,
 			HertlHendlBot.ABILITY_NAME_ADD_POSITION,
 			HertlHendlBot.ABILITY_NAME_ORDER,
 			HertlHendlBot.ABILITY_NAME_COMMIT_ORDER,

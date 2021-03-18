@@ -79,11 +79,13 @@ public class HertlHendlBot extends AbilityBot
 	public static final String ABILITY_NAME_NEW_ORDER = "neuebestellung";
 	public static final String ABILITY_NAME_MY_OPEN_ORDERS = "meineoffnenebestellungen";
 	public static final String ABILITY_NAME_ADMIN_OPEN_ORDERS = "adminoffnenebestellungen";
+	public static final String ABILITY_NAME_ADMIN_CLOSE_ORDERS = "admincloseorders";
 	public static final String ABILITY_NAME_CLOSE_ORDER = "closeorder";
 	public static final String ABILITY_NAME_COMMIT_ORDER = "commitorder";
 
-	private static final String MESSAGE_CLOSE_ALREADY_SUCCESSFULL = "Die Bestellung wurde erfolgreich abgeschlossen.";
-	private static final String MESSAGE_CLOSE_ALREADY_CLOSED = "Die Bestellung ist bereits abgeschlossen.";
+	private static final String MESSAGE_CLOSE_SUCCESSFULL = "Die Bestellung wurde erfolgreich geschlossen.";
+	private static final String ALL_MESSAGE_CLOSE_SUCCESSFULL = "Alle offenen Bestellungen wurde erfolgreich geschlossen.";
+	private static final String MESSAGE_CLOSE_ALREADY_CLOSED = "Die Bestellung ist bereits geschlossen.";
 	private static final String MESSAGE_ALREADY_COMMITED = "Die Bestellung wurde bereits bestätigt";
 	private static final String MESSAGE_COMMIT_SUCCESSFULL = "Die Bestellung wurde erfolgreich bestätigt";
 
@@ -225,8 +227,28 @@ public class HertlHendlBot extends AbilityBot
 						final SendMessage message = new SendMessage();
 						message.setChatId(Long.toString(context.chatId()));
 						message.setText(OrderHelper.getTotalOrder(hertlBotDao.loadOpenOrdersForToday()).toString());
-						final ReplyKeyboardMarkup keyboardMarkup = keyBoardBuilder.buildOrderMarkup(context);
-						message.setReplyMarkup(keyboardMarkup);
+						
+						this.silent.execute(message);
+					}
+				}).build();
+	}
+	
+	public Ability adminCloseOrders()
+	{
+
+		return Ability.builder().name(ABILITY_NAME_ADMIN_CLOSE_ORDERS).info("Schliest alle offnen Bestellungen für Heute").locality(ALL)
+				.privacy(PUBLIC).action(context ->
+				{
+					if (roleController.canUseAbility(context.user(), ABILITY_NAME_ADMIN_CLOSE_ORDERS))
+					{
+						 SendMessage messageOrder = new SendMessage();
+						 messageOrder.setChatId(Long.toString(context.chatId()));
+						hertlBotDao.loadOpenOrdersForToday().stream().forEach(order -> closeOrder(order, messageOrder));;
+
+						
+						SendMessage message = new SendMessage();
+						message.setText(ALL_MESSAGE_CLOSE_SUCCESSFULL);
+						message.setChatId(Long.toString(context.chatId()));
 						this.silent.execute(message);
 					}
 				}).build();
@@ -263,6 +285,8 @@ public class HertlHendlBot extends AbilityBot
 						final SendMessage message = new SendMessage();
 						message.setChatId(Long.toString(context.chatId()));
 						message.setText(keyBoardBuilder.createAndShowNewOrder(context.chatId(), TelegramHelper.getTotalUserName(context.user())));
+						final ReplyKeyboardMarkup keyboardMarkup = keyBoardBuilder.buildOrderMarkup(context);
+						message.setReplyMarkup(keyboardMarkup);
 						this.silent.execute(message);
 					}
 				}).build();
@@ -314,7 +338,7 @@ public class HertlHendlBot extends AbilityBot
 				}).build();
 	}
 
-	public Ability closeOrder()
+	public Ability closeOrderAbility()
 	{
 
 		return Ability.builder().name(ABILITY_NAME_CLOSE_ORDER).info("Schließt die Bestellung ab.").locality(ALL)
@@ -330,21 +354,25 @@ public class HertlHendlBot extends AbilityBot
 						final SendMessage message = new SendMessage();
 						message.setChatId(Long.toString(context.chatId()));
 
-						if (bestellung.isClosed())
-						{
-
-							message.setText(MESSAGE_CLOSE_ALREADY_CLOSED);
-						} else
-						{
-							bestellung.setClosed(true);
-							HertlBotRootDao.storageManager().store(bestellung);
-							message.setText(MESSAGE_CLOSE_ALREADY_SUCCESSFULL);
-						}
+						closeOrder(bestellung, message);
 
 						this.silent.execute(message);
 					}
 				}).build();
 	}
+private void closeOrder(final HertlBotOrder bestellung, final SendMessage message)
+{
+	if (bestellung.isClosed())
+							{
+	
+								message.setText(MESSAGE_CLOSE_ALREADY_CLOSED);
+							} else
+							{
+								bestellung.setClosed(true);
+								HertlBotRootDao.storageManager().store(bestellung);
+								message.setText(MESSAGE_CLOSE_SUCCESSFULL);
+							}
+}
 	
 	public Ability commitOrder()
 	{
