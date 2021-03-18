@@ -49,6 +49,7 @@ public class OrderHelper
 		{
 			position = new HertlBotPosition();
 			position.setArtikel(artikel);
+			position.setMenge(amount);
 			bestellung.addPosition(position, HertlBotRootDao.storageManager());
 		}
 	}

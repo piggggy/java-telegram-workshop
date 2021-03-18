@@ -24,7 +24,8 @@ public class HertlRoleController implements RoleController
 			HertlHendlBot.ABILITY_NAME_ADMIN_OPEN_ORDERS,
 			HertlHendlBot.ABILITY_NAME_ADD_POSITION,
 			HertlHendlBot.ABILITY_NAME_ORDER,
-			HertlHendlBot.ABILITY_NAME_COMMIT_ORDER);
+			HertlHendlBot.ABILITY_NAME_COMMIT_ORDER,
+			HertlHendlBot.ABILITY_NAME_CLOSE_ORDER);
 	private static List<String> USER_SET = Arrays.asList(
 			HertlHendlBot.ABILITY_NAME_HELP,
 			HertlHendlBot.ABILITY_NAME_LOCATION_PHOTO,
@@ -36,7 +37,8 @@ public class HertlRoleController implements RoleController
 			HertlHendlBot.ABILITY_NAME_MY_OPEN_ORDERS,
 			HertlHendlBot.ABILITY_NAME_ADD_POSITION,
 			HertlHendlBot.ABILITY_NAME_ORDER,
-			HertlHendlBot.ABILITY_NAME_COMMIT_ORDER);
+			HertlHendlBot.ABILITY_NAME_COMMIT_ORDER,
+			HertlHendlBot.ABILITY_NAME_CLOSE_ORDER);
 
 	private RightController rigthController;
 
